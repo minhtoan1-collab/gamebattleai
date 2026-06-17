@@ -160,3 +160,67 @@
     pointer-events: none;
   }
 }
+
+/* ── Game world animations ─────────────────────────────────── */
+@keyframes sway {
+  from { transform: rotate(-2deg); }
+  to   { transform: rotate(2deg);  }
+}
+@keyframes fogDrift {
+  from { transform: translateX(0);     }
+  to   { transform: translateX(-50%);  }
+}
+@keyframes flicker {
+  from { opacity: 0.4; transform: scaleY(0.9); }
+  to   { opacity: 0.9; transform: scaleY(1.15); }
+}
+@keyframes rise {
+  0%   { opacity: 0.6; transform: translateY(0) scale(1); }
+  100% { opacity: 0;   transform: translateY(-30px) scale(1.8); }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes twinkle {
+  from { opacity: 0.2; }
+  to   { opacity: 1;   }
+}
+@keyframes floatUp {
+  0%   { transform: translateY(0px);  opacity: 1; }
+  100% { transform: translateY(-60px); opacity: 0; }
+}
+@keyframes hpShake {
+  0%,100% { transform: translateX(0);   }
+  20%      { transform: translateX(-6px);}
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px);}
+  80%      { transform: translateX(4px); }
+}
+@keyframes entranceWalk {
+  from { transform: translateX(-80px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+@keyframes enemyEntrance {
+  from { transform: translateX(80px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes idleBob {
+  0%, 100% { transform: translateY(0px);  }
+  50%      { transform: translateY(-6px); }
+}
+@keyframes attackLunge {
+  0%   { transform: translateX(0); }
+  30%  { transform: translateX(40px); }
+  60%  { transform: translateX(30px); }
+  100% { transform: translateX(0); }
+}
+@keyframes hitFlash {
+  0%,100% { filter: brightness(1); }
+  25%,75% { filter: brightness(3) saturate(0); }
+  50%     { filter: brightness(0.5); }
+}
+@keyframes groundPulse {
+  0%,100% { opacity: 0.3; }
+  50%     { opacity: 0.7; }
+}
