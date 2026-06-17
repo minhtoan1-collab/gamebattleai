@@ -19,6 +19,8 @@ export interface Character {
   /** @nullable */
   worldId: number | null;
   /** @nullable */
+  currentLocationId?: number | null;
+  /** @nullable */
   equippedWeapon?: string | null;
   /** @nullable */
   equippedArmor?: string | null;

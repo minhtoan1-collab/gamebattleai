@@ -22,6 +22,8 @@ export interface Character {
   /** @nullable */
   worldId: number | null;
   /** @nullable */
+  currentLocationId?: number | null;
+  /** @nullable */
   equippedWeapon?: string | null;
   /** @nullable */
   equippedArmor?: string | null;
@@ -45,6 +47,20 @@ export interface CharacterStats {
   losses: number;
 }
 
+export interface Location {
+  id: number;
+  worldId: number;
+  name: string;
+  description: string;
+  dangerLevel: number;
+}
+
+export interface TravelInput {
+  characterId: number;
+  worldId: number;
+  locationId?: number;
+}
+
 export interface World {
   id: number;
   name: string;
@@ -53,6 +69,12 @@ export interface World {
   minLevel: number;
   npcCount: number;
   isBossWorld?: boolean;
+}
+
+export interface TravelResult {
+  character: Character;
+  world: World;
+  location?: Location | null;
 }
 
 export interface Npc {

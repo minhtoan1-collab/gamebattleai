@@ -31,8 +31,11 @@ import type {
   HealthStatus,
   InventoryItem,
   LeaderboardEntry,
+  Location,
   Npc,
   ProgressionSummary,
+  TravelInput,
+  TravelResult,
   World
 } from './api.schemas';
 
@@ -651,6 +654,83 @@ export function useGetWorld<TData = Awaited<ReturnType<typeof getWorld>>, TError
 
 
 
+export const getListWorldLocationsUrl = (id: number,) => {
+
+
+
+
+  return `/api/worlds/${id}/locations`
+}
+
+/**
+ * @summary Địa điểm trong thế giới
+ */
+export const listWorldLocations = async (id: number, options?: RequestInit): Promise<Location[]> => {
+
+  return customFetch<Location[]>(getListWorldLocationsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWorldLocationsQueryKey = (id: number,) => {
+    return [
+    `/api/worlds/${id}/locations`
+    ] as const;
+    }
+
+
+export const getListWorldLocationsQueryOptions = <TData = Awaited<ReturnType<typeof listWorldLocations>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorldLocations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWorldLocationsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorldLocations>>> = ({ signal }) => listWorldLocations(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorldLocations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWorldLocationsQueryResult = NonNullable<Awaited<ReturnType<typeof listWorldLocations>>>
+export type ListWorldLocationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Địa điểm trong thế giới
+ */
+
+export function useListWorldLocations<TData = Awaited<ReturnType<typeof listWorldLocations>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorldLocations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWorldLocationsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
 export const getListWorldNpcsUrl = (id: number,) => {
 
 
@@ -727,6 +807,154 @@ export function useListWorldNpcs<TData = Awaited<ReturnType<typeof listWorldNpcs
 
 
 
+
+export const getGetLocationUrl = (id: number,) => {
+
+
+
+
+  return `/api/locations/${id}`
+}
+
+/**
+ * @summary Chi tiết địa điểm
+ */
+export const getLocation = async (id: number, options?: RequestInit): Promise<Location> => {
+
+  return customFetch<Location>(getGetLocationUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLocationQueryKey = (id: number,) => {
+    return [
+    `/api/locations/${id}`
+    ] as const;
+    }
+
+
+export const getGetLocationQueryOptions = <TData = Awaited<ReturnType<typeof getLocation>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLocation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLocationQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLocation>>> = ({ signal }) => getLocation(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLocation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLocationQueryResult = NonNullable<Awaited<ReturnType<typeof getLocation>>>
+export type GetLocationQueryError = ErrorType<void>
+
+
+/**
+ * @summary Chi tiết địa điểm
+ */
+
+export function useGetLocation<TData = Awaited<ReturnType<typeof getLocation>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLocation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLocationQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getTravelUrl = () => {
+
+
+
+
+  return `/api/travel`
+}
+
+/**
+ * @summary Di chuyển nhân vật đến thế giới/địa điểm
+ */
+export const travel = async (travelInput: TravelInput, options?: RequestInit): Promise<TravelResult> => {
+
+  return customFetch<TravelResult>(getTravelUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      travelInput,)
+  }
+);}
+
+
+
+
+export const getTravelMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof travel>>, TError,{data: BodyType<TravelInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof travel>>, TError,{data: BodyType<TravelInput>}, TContext> => {
+
+const mutationKey = ['travel'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof travel>>, {data: BodyType<TravelInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  travel(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TravelMutationResult = NonNullable<Awaited<ReturnType<typeof travel>>>
+    export type TravelMutationBody = BodyType<TravelInput>
+    export type TravelMutationError = ErrorType<void>
+
+    /**
+ * @summary Di chuyển nhân vật đến thế giới/địa điểm
+ */
+export const useTravel = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof travel>>, TError,{data: BodyType<TravelInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof travel>>,
+        TError,
+        {data: BodyType<TravelInput>},
+        TContext
+      > => {
+      return useMutation(getTravelMutationOptions(options));
+    }
 
 export const getListNpcsUrl = () => {
 

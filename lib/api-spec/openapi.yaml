@@ -155,6 +155,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/World"
 
+  /worlds/{id}/locations:
+    get:
+      operationId: listWorldLocations
+      tags: [worlds]
+      summary: Địa điểm trong thế giới
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Location"
+
   /worlds/{id}/npcs:
     get:
       operationId: listWorldNpcs
@@ -175,6 +196,50 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Npc"
+
+  /locations/{id}:
+    get:
+      operationId: getLocation
+      tags: [worlds]
+      summary: Chi tiết địa điểm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+        "404":
+          description: Not found
+
+  /travel:
+    post:
+      operationId: travel
+      tags: [worlds]
+      summary: Di chuyển nhân vật đến thế giới/địa điểm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TravelInput"
+      responses:
+        "200":
+          description: Travelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TravelResult"
+        "403":
+          description: Level too low
+        "404":
+          description: Character, world or location not found
 
   # ── NPCS ────────────────────────────────────────────────────
   /npcs:
@@ -378,19 +443,20 @@ components:
       type: object
       required: [id, name, class, level, hp, maxHp, xp, xpToNext, gold, worldId]
       properties:
-        id:          { type: integer }
-        name:        { type: string }
-        class:       { type: string }
-        level:       { type: integer }
-        hp:          { type: integer }
-        maxHp:       { type: integer }
-        xp:          { type: integer }
-        xpToNext:    { type: integer }
-        gold:        { type: integer }
-        worldId:     { type: ["integer", "null"] }
-        equippedWeapon:  { type: ["string", "null"] }
-        equippedArmor:   { type: ["string", "null"] }
-        createdAt:   { type: string }
+        id:                 { type: integer }
+        name:               { type: string }
+        class:              { type: string }
+        level:              { type: integer }
+        hp:                 { type: integer }
+        maxHp:              { type: integer }
+        xp:                 { type: integer }
+        xpToNext:           { type: integer }
+        gold:               { type: integer }
+        worldId:            { type: ["integer", "null"] }
+        currentLocationId:  { type: ["integer", "null"] }
+        equippedWeapon:     { type: ["string", "null"] }
+        equippedArmor:      { type: ["string", "null"] }
+        createdAt:          { type: string }
 
     CharacterInput:
       type: object
@@ -411,6 +477,37 @@ components:
         totalBattles:  { type: integer }
         wins:          { type: integer }
         losses:        { type: integer }
+
+    # ── Location ──
+    Location:
+      type: object
+      required: [id, worldId, name, description, dangerLevel]
+      properties:
+        id:          { type: integer }
+        worldId:     { type: integer }
+        name:        { type: string }
+        description: { type: string }
+        dangerLevel: { type: integer }
+
+    # ── Travel ──
+    TravelInput:
+      type: object
+      required: [characterId, worldId]
+      properties:
+        characterId: { type: integer }
+        worldId:     { type: integer }
+        locationId:  { type: integer }
+
+    TravelResult:
+      type: object
+      required: [character, world]
+      properties:
+        character: { $ref: "#/components/schemas/Character" }
+        world:     { $ref: "#/components/schemas/World" }
+        location:
+          oneOf:
+            - $ref: "#/components/schemas/Location"
+            - type: "null"
 
     # ── World ──
     World:

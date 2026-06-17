@@ -13,6 +13,7 @@ export const charactersTable = pgTable("characters", {
   xpToNext: integer("xp_to_next").notNull().default(150),
   gold: integer("gold").notNull().default(0),
   worldId: integer("world_id"),
+  currentLocationId: integer("current_location_id"),
   equippedWeapon: text("equipped_weapon"),
   equippedArmor: text("equipped_armor"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

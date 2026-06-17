@@ -30,6 +30,7 @@ export const ListCharactersResponseItem = zod.object({
   "xpToNext": zod.number(),
   "gold": zod.number(),
   "worldId": zod.number().nullable(),
+  "currentLocationId": zod.number().nullish(),
   "equippedWeapon": zod.string().nullish(),
   "equippedArmor": zod.string().nullish(),
   "createdAt": zod.string().optional()
@@ -67,6 +68,7 @@ export const GetCharacterResponse = zod.object({
   "xpToNext": zod.number(),
   "gold": zod.number(),
   "worldId": zod.number().nullable(),
+  "currentLocationId": zod.number().nullish(),
   "equippedWeapon": zod.string().nullish(),
   "equippedArmor": zod.string().nullish(),
   "createdAt": zod.string().optional()
@@ -134,6 +136,23 @@ export const GetWorldResponse = zod.object({
 
 
 /**
+ * @summary Địa điểm trong thế giới
+ */
+export const ListWorldLocationsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListWorldLocationsResponseItem = zod.object({
+  "id": zod.number(),
+  "worldId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "dangerLevel": zod.number()
+})
+export const ListWorldLocationsResponse = zod.array(ListWorldLocationsResponseItem)
+
+
+/**
  * @summary NPC trong thế giới
  */
 export const ListWorldNpcsParams = zod.object({
@@ -154,6 +173,67 @@ export const ListWorldNpcsResponseItem = zod.object({
   "isBoss": zod.boolean().optional()
 })
 export const ListWorldNpcsResponse = zod.array(ListWorldNpcsResponseItem)
+
+
+/**
+ * @summary Chi tiết địa điểm
+ */
+export const GetLocationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetLocationResponse = zod.object({
+  "id": zod.number(),
+  "worldId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "dangerLevel": zod.number()
+})
+
+
+/**
+ * @summary Di chuyển nhân vật đến thế giới/địa điểm
+ */
+export const TravelBody = zod.object({
+  "characterId": zod.number(),
+  "worldId": zod.number(),
+  "locationId": zod.number().optional()
+})
+
+export const TravelResponse = zod.object({
+  "character": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "class": zod.string(),
+  "level": zod.number(),
+  "hp": zod.number(),
+  "maxHp": zod.number(),
+  "xp": zod.number(),
+  "xpToNext": zod.number(),
+  "gold": zod.number(),
+  "worldId": zod.number().nullable(),
+  "currentLocationId": zod.number().nullish(),
+  "equippedWeapon": zod.string().nullish(),
+  "equippedArmor": zod.string().nullish(),
+  "createdAt": zod.string().optional()
+}),
+  "world": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "theme": zod.string(),
+  "minLevel": zod.number(),
+  "npcCount": zod.number(),
+  "isBossWorld": zod.boolean().optional()
+}),
+  "location": zod.union([zod.object({
+  "id": zod.number(),
+  "worldId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "dangerLevel": zod.number()
+}),zod.null()]).optional()
+})
 
 
 /**
@@ -320,6 +400,7 @@ export const EquipItemResponse = zod.object({
   "xpToNext": zod.number(),
   "gold": zod.number(),
   "worldId": zod.number().nullable(),
+  "currentLocationId": zod.number().nullish(),
   "equippedWeapon": zod.string().nullish(),
   "equippedArmor": zod.string().nullish(),
   "createdAt": zod.string().optional()

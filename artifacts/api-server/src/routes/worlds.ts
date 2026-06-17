@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { worldsTable, npcsTable } from "@workspace/db";
+import { worldsTable, npcsTable, locationsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { GetWorldParams, ListWorldNpcsParams } from "@workspace/api-zod";
 
@@ -18,6 +18,21 @@ router.get("/worlds/:id", async (req, res) => {
   const [world] = await db.select().from(worldsTable).where(eq(worldsTable.id, parsed.data.id));
   if (!world) return res.status(404).json({ error: "World not found" });
   res.json(world);
+});
+
+router.get("/worlds/:id/locations", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "Invalid id" });
+  }
+
+  const locations = await db
+    .select()
+    .from(locationsTable)
+    .where(eq(locationsTable.worldId, id))
+    .orderBy(locationsTable.dangerLevel);
+
+  res.json(locations);
 });
 
 router.get("/worlds/:id/npcs", async (req, res) => {
