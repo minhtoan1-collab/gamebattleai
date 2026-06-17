@@ -223,6 +223,29 @@ export const GetLocationResponse = zod.object({
 
 
 /**
+ * @summary Tương tác với NPC
+ */
+export const InteractBody = zod.object({
+  "characterId": zod.number(),
+  "npcId": zod.number(),
+  "action": zod.enum(['talk', 'trade', 'quest', 'inspect'])
+})
+
+export const InteractResponse = zod.object({
+  "npc": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss'])
+}),
+  "interaction": zod.object({
+  "action": zod.enum(['talk', 'trade', 'quest', 'inspect']),
+  "message": zod.string()
+}),
+  "availableActions": zod.array(zod.enum(['talk', 'trade', 'quest', 'inspect']))
+})
+
+
+/**
  * @summary Di chuyển nhân vật đến thế giới/địa điểm
  */
 export const TravelBody = zod.object({

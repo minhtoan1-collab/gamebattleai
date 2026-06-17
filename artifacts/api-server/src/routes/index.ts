@@ -8,6 +8,7 @@ import npcsRouter from "./npcs";
 import battlesRouter from "./battles";
 import inventoryRouter from "./inventory";
 import progressionRouter from "./progression";
+import interactRouter from "./interact";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(npcsRouter);
 router.use(battlesRouter);
 router.use(inventoryRouter);
 router.use(progressionRouter);
+router.use(interactRouter);
 
 export default router;

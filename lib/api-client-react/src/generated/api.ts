@@ -29,6 +29,8 @@ import type {
   CharacterStats,
   EquipInput,
   HealthStatus,
+  InteractInput,
+  InteractResult,
   InventoryItem,
   LeaderboardEntry,
   Location,
@@ -961,6 +963,77 @@ export function useGetLocation<TData = Awaited<ReturnType<typeof getLocation>>, 
 
 
 
+
+export const getInteractUrl = () => {
+
+
+
+
+  return `/api/interact`
+}
+
+/**
+ * @summary Tương tác với NPC
+ */
+export const interact = async (interactInput: InteractInput, options?: RequestInit): Promise<InteractResult> => {
+
+  return customFetch<InteractResult>(getInteractUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      interactInput,)
+  }
+);}
+
+
+
+
+export const getInteractMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof interact>>, TError,{data: BodyType<InteractInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof interact>>, TError,{data: BodyType<InteractInput>}, TContext> => {
+
+const mutationKey = ['interact'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof interact>>, {data: BodyType<InteractInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  interact(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InteractMutationResult = NonNullable<Awaited<ReturnType<typeof interact>>>
+    export type InteractMutationBody = BodyType<InteractInput>
+    export type InteractMutationError = ErrorType<void>
+
+    /**
+ * @summary Tương tác với NPC
+ */
+export const useInteract = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof interact>>, TError,{data: BodyType<InteractInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof interact>>,
+        TError,
+        {data: BodyType<InteractInput>},
+        TContext
+      > => {
+      return useMutation(getInteractMutationOptions(options));
+    }
 
 export const getTravelUrl = () => {
 

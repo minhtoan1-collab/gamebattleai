@@ -239,6 +239,31 @@ paths:
         "404":
           description: Not found
 
+  /interact:
+    post:
+      operationId: interact
+      tags: [npcs]
+      summary: Tương tác với NPC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InteractInput"
+      responses:
+        "200":
+          description: Interaction result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InteractResult"
+        "400":
+          description: Invalid action or bad input
+        "403":
+          description: NPC not interactable, wrong location, or action not allowed
+        "404":
+          description: NPC or character not found
+
   /travel:
     post:
       operationId: travel
@@ -509,6 +534,52 @@ components:
         name:        { type: string }
         description: { type: string }
         dangerLevel: { type: integer }
+
+    # ── Interaction ──
+    NpcInteractionType:
+      type: string
+      enum: [talk, trade, quest, inspect]
+
+    InteractInput:
+      type: object
+      required: [characterId, npcId, action]
+      properties:
+        characterId: { type: integer }
+        npcId:       { type: integer }
+        action:      { $ref: "#/components/schemas/NpcInteractionType" }
+
+    InteractResult:
+      type: object
+      required: [npc, interaction, availableActions]
+      properties:
+        npc:
+          type: object
+          required: [id, name, role]
+          properties:
+            id:   { type: integer }
+            name: { type: string }
+            role: { $ref: "#/components/schemas/NpcRole" }
+        interaction:
+          type: object
+          required: [action, message]
+          properties:
+            action:  { $ref: "#/components/schemas/NpcInteractionType" }
+            message: { type: string }
+        availableActions:
+          type: array
+          items:
+            $ref: "#/components/schemas/NpcInteractionType"
+
+    NpcInteraction:
+      type: object
+      required: [id, characterId, npcId, interactionType, createdAt]
+      properties:
+        id:              { type: integer }
+        characterId:     { type: integer }
+        npcId:           { type: integer }
+        interactionType: { $ref: "#/components/schemas/NpcInteractionType" }
+        metadata:        { type: object, nullable: true }
+        createdAt:       { type: string }
 
     # ── Travel ──
     TravelInput:

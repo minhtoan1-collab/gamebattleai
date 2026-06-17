@@ -55,6 +55,61 @@ export interface Location {
   dangerLevel: number;
 }
 
+export type NpcInteractionType = typeof NpcInteractionType[keyof typeof NpcInteractionType];
+
+
+export const NpcInteractionType = {
+  talk: 'talk',
+  trade: 'trade',
+  quest: 'quest',
+  inspect: 'inspect',
+} as const;
+
+export interface InteractInput {
+  characterId: number;
+  npcId: number;
+  action: NpcInteractionType;
+}
+
+export type NpcRole = typeof NpcRole[keyof typeof NpcRole];
+
+
+export const NpcRole = {
+  enemy: 'enemy',
+  merchant: 'merchant',
+  guard: 'guard',
+  quest_giver: 'quest_giver',
+  boss: 'boss',
+} as const;
+
+export type InteractResultNpc = {
+  id: number;
+  name: string;
+  role: NpcRole;
+};
+
+export type InteractResultInteraction = {
+  action: NpcInteractionType;
+  message: string;
+};
+
+export interface InteractResult {
+  npc: InteractResultNpc;
+  interaction: InteractResultInteraction;
+  availableActions: NpcInteractionType[];
+}
+
+export type NpcInteractionMetadata = { [key: string]: unknown } | null;
+
+export interface NpcInteraction {
+  id: number;
+  characterId: number;
+  npcId: number;
+  interactionType: NpcInteractionType;
+  metadata?: NpcInteractionMetadata;
+  createdAt: string;
+}
+
 export interface TravelInput {
   characterId: number;
   worldId: number;
@@ -70,17 +125,6 @@ export interface World {
   npcCount: number;
   isBossWorld?: boolean;
 }
-
-export type NpcRole = typeof NpcRole[keyof typeof NpcRole];
-
-
-export const NpcRole = {
-  enemy: 'enemy',
-  merchant: 'merchant',
-  guard: 'guard',
-  quest_giver: 'quest_giver',
-  boss: 'boss',
-} as const;
 
 export interface Npc {
   id: number;
