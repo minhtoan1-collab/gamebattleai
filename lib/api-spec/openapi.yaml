@@ -366,6 +366,70 @@ paths:
                 items:
                   $ref: "#/components/schemas/CharacterQuestWithDetails"
 
+  /characters/{id}/reputation:
+    get:
+      operationId: getCharacterReputation
+      tags: [reputation]
+      summary: Danh tiếng của nhân vật theo từng thế giới
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: World reputation list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorldReputationEntry"
+
+  /characters/{id}/relationships:
+    get:
+      operationId: getCharacterRelationships
+      tags: [reputation]
+      summary: Mối quan hệ của nhân vật với các NPC
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: NPC relationship list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NpcRelationshipEntry"
+
+  /characters/{id}/relationships/{npcId}:
+    get:
+      operationId: getCharacterNpcRelationship
+      tags: [reputation]
+      summary: Mối quan hệ với một NPC cụ thể
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+        - in: path
+          name: npcId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: NPC relationship entry (score 0 / Trung Lập if never interacted)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NpcRelationshipEntry"
+        "404":
+          description: NPC not found
+
   /travel:
     post:
       operationId: travel
@@ -756,6 +820,42 @@ components:
         levelUp:       { type: boolean }
         character:     { $ref: "#/components/schemas/Character" }
         characterQuest: { $ref: "#/components/schemas/CharacterQuest" }
+
+    # ── Reputation ──
+    WorldReputationEntry:
+      type: object
+      required: [worldId, worldName, score, tier]
+      properties:
+        worldId:   { type: integer }
+        worldName: { type: string }
+        score:     { type: integer }
+        tier:      { type: string }
+        updatedAt: { type: string, nullable: true }
+
+    NpcRelationshipEntry:
+      type: object
+      required: [npcId, npcName, npcRole, score, tier]
+      properties:
+        npcId:     { type: integer }
+        npcName:   { type: string }
+        npcRole:   { $ref: "#/components/schemas/NpcRole" }
+        score:     { type: integer }
+        tier:      { type: string }
+        updatedAt: { type: string, nullable: true }
+
+    RelationshipEvent:
+      type: object
+      required: [id, characterId, eventType, delta, sourceType, createdAt]
+      properties:
+        id:          { type: integer }
+        characterId: { type: integer }
+        npcId:       { type: integer, nullable: true }
+        worldId:     { type: integer, nullable: true }
+        eventType:   { type: string }
+        delta:       { type: integer }
+        sourceType:  { type: string }
+        sourceId:    { type: integer, nullable: true }
+        createdAt:   { type: string }
 
     # ── Travel ──
     TravelInput:

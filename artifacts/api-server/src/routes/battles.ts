@@ -9,6 +9,7 @@ import {
 } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { advanceQuestProgress } from "../utils/questProgress";
+import { adjustWorldReputation } from "../utils/reputation";
 import {
   StartBattleBody,
   GetBattleParams,
@@ -345,6 +346,15 @@ router.post("/battles/:id/action", async (req, res) => {
   }
 
   const result = status === "won" ? "victory" : status === "lost" ? "defeat" : status === "fled" ? "fled" : null;
+
+  if (status === "won") {
+    const repDelta = npc.isBoss ? 8 : 3;
+    await adjustWorldReputation(character.id, npc.worldId, repDelta, "battle_win", "battle", id);
+  } else if (status === "lost") {
+    await adjustWorldReputation(character.id, npc.worldId, -2, "battle_lost", "battle", id);
+  } else if (status === "fled") {
+    await adjustWorldReputation(character.id, npc.worldId, -1, "battle_fled", "battle", id);
+  }
 
   res.json({
     battle: updatedBattle,

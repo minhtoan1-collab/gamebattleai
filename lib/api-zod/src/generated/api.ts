@@ -355,6 +355,59 @@ export const GetCharacterQuestsResponse = zod.array(GetCharacterQuestsResponseIt
 
 
 /**
+ * @summary Danh tiếng của nhân vật theo từng thế giới
+ */
+export const GetCharacterReputationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCharacterReputationResponseItem = zod.object({
+  "worldId": zod.number(),
+  "worldName": zod.string(),
+  "score": zod.number(),
+  "tier": zod.string(),
+  "updatedAt": zod.string().nullish()
+})
+export const GetCharacterReputationResponse = zod.array(GetCharacterReputationResponseItem)
+
+
+/**
+ * @summary Mối quan hệ của nhân vật với các NPC
+ */
+export const GetCharacterRelationshipsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCharacterRelationshipsResponseItem = zod.object({
+  "npcId": zod.number(),
+  "npcName": zod.string(),
+  "npcRole": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
+  "score": zod.number(),
+  "tier": zod.string(),
+  "updatedAt": zod.string().nullish()
+})
+export const GetCharacterRelationshipsResponse = zod.array(GetCharacterRelationshipsResponseItem)
+
+
+/**
+ * @summary Mối quan hệ với một NPC cụ thể
+ */
+export const GetCharacterNpcRelationshipParams = zod.object({
+  "id": zod.coerce.number(),
+  "npcId": zod.coerce.number()
+})
+
+export const GetCharacterNpcRelationshipResponse = zod.object({
+  "npcId": zod.number(),
+  "npcName": zod.string(),
+  "npcRole": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
+  "score": zod.number(),
+  "tier": zod.string(),
+  "updatedAt": zod.string().nullish()
+})
+
+
+/**
  * @summary Di chuyển nhân vật đến thế giới/địa điểm
  */
 export const TravelBody = zod.object({

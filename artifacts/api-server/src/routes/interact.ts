@@ -10,6 +10,7 @@ import {
   type NpcRole,
 } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { adjustNpcRelationship } from "../utils/reputation";
 
 const router = Router();
 
@@ -132,12 +133,20 @@ router.post("/interact", async (req, res) => {
   const messagePool = MESSAGES[role]?.[typedAction] ?? ["..."];
   const message = pickMessage(messagePool, nId);
 
-  await db.insert(npcInteractionsTable).values({
-    characterId: charId,
-    npcId: nId,
-    interactionType: typedAction,
-    metadata: null,
-  });
+  const [insertedInteraction] = await db
+    .insert(npcInteractionsTable)
+    .values({ characterId: charId, npcId: nId, interactionType: typedAction, metadata: null })
+    .returning();
+
+  const ACTION_DELTAS: Record<InteractionType, number> = { talk: 2, trade: 3, quest: 5, inspect: 1 };
+  await adjustNpcRelationship(
+    charId,
+    nId,
+    ACTION_DELTAS[typedAction],
+    `interact_${typedAction}`,
+    "interact",
+    insertedInteraction.id
+  );
 
   const responseBody: Record<string, unknown> = {
     npc: { id: npc.id, name: npc.name, role: npc.role },

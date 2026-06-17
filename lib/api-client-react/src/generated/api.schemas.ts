@@ -180,6 +180,35 @@ export interface ClaimQuestResult {
   characterQuest: CharacterQuest;
 }
 
+export interface WorldReputationEntry {
+  worldId: number;
+  worldName: string;
+  score: number;
+  tier: string;
+  updatedAt?: string | null;
+}
+
+export interface NpcRelationshipEntry {
+  npcId: number;
+  npcName: string;
+  npcRole: NpcRole;
+  score: number;
+  tier: string;
+  updatedAt?: string | null;
+}
+
+export interface RelationshipEvent {
+  id: number;
+  characterId: number;
+  npcId?: number | null;
+  worldId?: number | null;
+  eventType: string;
+  delta: number;
+  sourceType: string;
+  sourceId?: number | null;
+  createdAt: string;
+}
+
 export interface TravelInput {
   characterId: number;
   worldId: number;

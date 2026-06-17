@@ -5,8 +5,10 @@ import {
   characterQuestsTable,
   charactersTable,
   characterStatsTable,
+  npcsTable,
 } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { adjustNpcRelationship, adjustWorldReputation } from "../utils/reputation";
 
 const router = Router();
 
@@ -142,6 +144,12 @@ router.post("/quests/:id/claim", async (req, res) => {
     .set({ status: "claimed" })
     .where(eq(characterQuestsTable.id, cq.id))
     .returning();
+
+  if (quest.questGiverId != null) {
+    await adjustNpcRelationship(characterId, quest.questGiverId, 15, "quest_claim", "quest", cq.id);
+    const [giver] = await db.select().from(npcsTable).where(eq(npcsTable.id, quest.questGiverId));
+    if (giver) await adjustWorldReputation(characterId, giver.worldId, 5, "quest_claim", "quest", cq.id);
+  }
 
   res.json({
     rewards: { xp: quest.rewardXp, gold: quest.rewardGold },

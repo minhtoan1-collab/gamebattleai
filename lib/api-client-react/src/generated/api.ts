@@ -38,12 +38,14 @@ import type {
   LeaderboardEntry,
   Location,
   Npc,
+  NpcRelationshipEntry,
   ProgressionSummary,
   Quest,
   QuestCharacterInput,
   TravelInput,
   TravelResult,
-  World
+  World,
+  WorldReputationEntry
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1326,6 +1328,242 @@ export function useGetCharacterQuests<TData = Awaited<ReturnType<typeof getChara
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetCharacterQuestsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetCharacterReputationUrl = (id: number,) => {
+
+
+
+
+  return `/api/characters/${id}/reputation`
+}
+
+/**
+ * @summary Danh tiếng của nhân vật theo từng thế giới
+ */
+export const getCharacterReputation = async (id: number, options?: RequestInit): Promise<WorldReputationEntry[]> => {
+
+  return customFetch<WorldReputationEntry[]>(getGetCharacterReputationUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCharacterReputationQueryKey = (id: number,) => {
+    return [
+    `/api/characters/${id}/reputation`
+    ] as const;
+    }
+
+
+export const getGetCharacterReputationQueryOptions = <TData = Awaited<ReturnType<typeof getCharacterReputation>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacterReputation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCharacterReputationQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCharacterReputation>>> = ({ signal }) => getCharacterReputation(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCharacterReputation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCharacterReputationQueryResult = NonNullable<Awaited<ReturnType<typeof getCharacterReputation>>>
+export type GetCharacterReputationQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Danh tiếng của nhân vật theo từng thế giới
+ */
+
+export function useGetCharacterReputation<TData = Awaited<ReturnType<typeof getCharacterReputation>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacterReputation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCharacterReputationQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetCharacterRelationshipsUrl = (id: number,) => {
+
+
+
+
+  return `/api/characters/${id}/relationships`
+}
+
+/**
+ * @summary Mối quan hệ của nhân vật với các NPC
+ */
+export const getCharacterRelationships = async (id: number, options?: RequestInit): Promise<NpcRelationshipEntry[]> => {
+
+  return customFetch<NpcRelationshipEntry[]>(getGetCharacterRelationshipsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCharacterRelationshipsQueryKey = (id: number,) => {
+    return [
+    `/api/characters/${id}/relationships`
+    ] as const;
+    }
+
+
+export const getGetCharacterRelationshipsQueryOptions = <TData = Awaited<ReturnType<typeof getCharacterRelationships>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacterRelationships>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCharacterRelationshipsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCharacterRelationships>>> = ({ signal }) => getCharacterRelationships(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCharacterRelationships>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCharacterRelationshipsQueryResult = NonNullable<Awaited<ReturnType<typeof getCharacterRelationships>>>
+export type GetCharacterRelationshipsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Mối quan hệ của nhân vật với các NPC
+ */
+
+export function useGetCharacterRelationships<TData = Awaited<ReturnType<typeof getCharacterRelationships>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacterRelationships>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCharacterRelationshipsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetCharacterNpcRelationshipUrl = (id: number,
+    npcId: number,) => {
+
+
+
+
+  return `/api/characters/${id}/relationships/${npcId}`
+}
+
+/**
+ * @summary Mối quan hệ với một NPC cụ thể
+ */
+export const getCharacterNpcRelationship = async (id: number,
+    npcId: number, options?: RequestInit): Promise<NpcRelationshipEntry> => {
+
+  return customFetch<NpcRelationshipEntry>(getGetCharacterNpcRelationshipUrl(id,npcId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCharacterNpcRelationshipQueryKey = (id: number,
+    npcId: number,) => {
+    return [
+    `/api/characters/${id}/relationships/${npcId}`
+    ] as const;
+    }
+
+
+export const getGetCharacterNpcRelationshipQueryOptions = <TData = Awaited<ReturnType<typeof getCharacterNpcRelationship>>, TError = ErrorType<void>>(id: number,
+    npcId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacterNpcRelationship>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCharacterNpcRelationshipQueryKey(id,npcId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCharacterNpcRelationship>>> = ({ signal }) => getCharacterNpcRelationship(id,npcId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id && npcId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCharacterNpcRelationship>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCharacterNpcRelationshipQueryResult = NonNullable<Awaited<ReturnType<typeof getCharacterNpcRelationship>>>
+export type GetCharacterNpcRelationshipQueryError = ErrorType<void>
+
+
+/**
+ * @summary Mối quan hệ với một NPC cụ thể
+ */
+
+export function useGetCharacterNpcRelationship<TData = Awaited<ReturnType<typeof getCharacterNpcRelationship>>, TError = ErrorType<void>>(
+ id: number,
+    npcId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacterNpcRelationship>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCharacterNpcRelationshipQueryOptions(id,npcId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
