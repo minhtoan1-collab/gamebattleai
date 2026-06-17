@@ -20,13 +20,16 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AcceptQuestResult,
   Battle,
   BattleActionInput,
   BattleActionResult,
   BattleStart,
   Character,
   CharacterInput,
+  CharacterQuestWithDetails,
   CharacterStats,
+  ClaimQuestResult,
   EquipInput,
   HealthStatus,
   InteractInput,
@@ -36,6 +39,8 @@ import type {
   Location,
   Npc,
   ProgressionSummary,
+  Quest,
+  QuestCharacterInput,
   TravelInput,
   TravelResult,
   World
@@ -1034,6 +1039,304 @@ export const useInteract = <TError = ErrorType<void>,
       > => {
       return useMutation(getInteractMutationOptions(options));
     }
+
+export const getGetQuestUrl = (id: number,) => {
+
+
+
+
+  return `/api/quests/${id}`
+}
+
+/**
+ * @summary Lấy chi tiết nhiệm vụ
+ */
+export const getQuest = async (id: number, options?: RequestInit): Promise<Quest> => {
+
+  return customFetch<Quest>(getGetQuestUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetQuestQueryKey = (id: number,) => {
+    return [
+    `/api/quests/${id}`
+    ] as const;
+    }
+
+
+export const getGetQuestQueryOptions = <TData = Awaited<ReturnType<typeof getQuest>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getQuest>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetQuestQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getQuest>>> = ({ signal }) => getQuest(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getQuest>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetQuestQueryResult = NonNullable<Awaited<ReturnType<typeof getQuest>>>
+export type GetQuestQueryError = ErrorType<void>
+
+
+/**
+ * @summary Lấy chi tiết nhiệm vụ
+ */
+
+export function useGetQuest<TData = Awaited<ReturnType<typeof getQuest>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getQuest>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetQuestQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAcceptQuestUrl = (id: number,) => {
+
+
+
+
+  return `/api/quests/${id}/accept`
+}
+
+/**
+ * @summary Nhận nhiệm vụ
+ */
+export const acceptQuest = async (id: number,
+    questCharacterInput: QuestCharacterInput, options?: RequestInit): Promise<AcceptQuestResult> => {
+
+  return customFetch<AcceptQuestResult>(getAcceptQuestUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      questCharacterInput,)
+  }
+);}
+
+
+
+
+export const getAcceptQuestMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptQuest>>, TError,{id: number;data: BodyType<QuestCharacterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptQuest>>, TError,{id: number;data: BodyType<QuestCharacterInput>}, TContext> => {
+
+const mutationKey = ['acceptQuest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptQuest>>, {id: number;data: BodyType<QuestCharacterInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  acceptQuest(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptQuestMutationResult = NonNullable<Awaited<ReturnType<typeof acceptQuest>>>
+    export type AcceptQuestMutationBody = BodyType<QuestCharacterInput>
+    export type AcceptQuestMutationError = ErrorType<void>
+
+    /**
+ * @summary Nhận nhiệm vụ
+ */
+export const useAcceptQuest = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptQuest>>, TError,{id: number;data: BodyType<QuestCharacterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof acceptQuest>>,
+        TError,
+        {id: number;data: BodyType<QuestCharacterInput>},
+        TContext
+      > => {
+      return useMutation(getAcceptQuestMutationOptions(options));
+    }
+
+export const getClaimQuestUrl = (id: number,) => {
+
+
+
+
+  return `/api/quests/${id}/claim`
+}
+
+/**
+ * @summary Nhận thưởng nhiệm vụ
+ */
+export const claimQuest = async (id: number,
+    questCharacterInput: QuestCharacterInput, options?: RequestInit): Promise<ClaimQuestResult> => {
+
+  return customFetch<ClaimQuestResult>(getClaimQuestUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      questCharacterInput,)
+  }
+);}
+
+
+
+
+export const getClaimQuestMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimQuest>>, TError,{id: number;data: BodyType<QuestCharacterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof claimQuest>>, TError,{id: number;data: BodyType<QuestCharacterInput>}, TContext> => {
+
+const mutationKey = ['claimQuest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof claimQuest>>, {id: number;data: BodyType<QuestCharacterInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  claimQuest(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClaimQuestMutationResult = NonNullable<Awaited<ReturnType<typeof claimQuest>>>
+    export type ClaimQuestMutationBody = BodyType<QuestCharacterInput>
+    export type ClaimQuestMutationError = ErrorType<void>
+
+    /**
+ * @summary Nhận thưởng nhiệm vụ
+ */
+export const useClaimQuest = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimQuest>>, TError,{id: number;data: BodyType<QuestCharacterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof claimQuest>>,
+        TError,
+        {id: number;data: BodyType<QuestCharacterInput>},
+        TContext
+      > => {
+      return useMutation(getClaimQuestMutationOptions(options));
+    }
+
+export const getGetCharacterQuestsUrl = (id: number,) => {
+
+
+
+
+  return `/api/characters/${id}/quests`
+}
+
+/**
+ * @summary Danh sách nhiệm vụ của nhân vật
+ */
+export const getCharacterQuests = async (id: number, options?: RequestInit): Promise<CharacterQuestWithDetails[]> => {
+
+  return customFetch<CharacterQuestWithDetails[]>(getGetCharacterQuestsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCharacterQuestsQueryKey = (id: number,) => {
+    return [
+    `/api/characters/${id}/quests`
+    ] as const;
+    }
+
+
+export const getGetCharacterQuestsQueryOptions = <TData = Awaited<ReturnType<typeof getCharacterQuests>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacterQuests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCharacterQuestsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCharacterQuests>>> = ({ signal }) => getCharacterQuests(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCharacterQuests>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCharacterQuestsQueryResult = NonNullable<Awaited<ReturnType<typeof getCharacterQuests>>>
+export type GetCharacterQuestsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Danh sách nhiệm vụ của nhân vật
+ */
+
+export function useGetCharacterQuests<TData = Awaited<ReturnType<typeof getCharacterQuests>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacterQuests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCharacterQuestsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getTravelUrl = () => {
 

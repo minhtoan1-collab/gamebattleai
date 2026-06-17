@@ -9,6 +9,7 @@ import battlesRouter from "./battles";
 import inventoryRouter from "./inventory";
 import progressionRouter from "./progression";
 import interactRouter from "./interact";
+import questsRouter from "./quests";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(battlesRouter);
 router.use(inventoryRouter);
 router.use(progressionRouter);
 router.use(interactRouter);
+router.use(questsRouter);
 
 export default router;

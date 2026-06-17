@@ -264,6 +264,108 @@ paths:
         "404":
           description: NPC or character not found
 
+  /quests/{id}:
+    get:
+      operationId: getQuest
+      tags: [quests]
+      summary: Lấy chi tiết nhiệm vụ
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Quest detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quest"
+        "404":
+          description: Quest not found
+
+  /quests/{id}/accept:
+    post:
+      operationId: acceptQuest
+      tags: [quests]
+      summary: Nhận nhiệm vụ
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestCharacterInput"
+      responses:
+        "201":
+          description: Quest accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptQuestResult"
+        "400":
+          description: Invalid input
+        "403":
+          description: Character level too low
+        "404":
+          description: Quest or character not found
+        "409":
+          description: Quest already accepted
+
+  /quests/{id}/claim:
+    post:
+      operationId: claimQuest
+      tags: [quests]
+      summary: Nhận thưởng nhiệm vụ
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestCharacterInput"
+      responses:
+        "200":
+          description: Rewards granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimQuestResult"
+        "400":
+          description: Quest not yet completed
+        "404":
+          description: Quest or character not found
+        "409":
+          description: Already claimed
+
+  /characters/{id}/quests:
+    get:
+      operationId: getCharacterQuests
+      tags: [quests]
+      summary: Danh sách nhiệm vụ của nhân vật
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Character quest list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CharacterQuestWithDetails"
+
   /travel:
     post:
       operationId: travel
@@ -580,6 +682,80 @@ components:
         interactionType: { $ref: "#/components/schemas/NpcInteractionType" }
         metadata:        { type: object, nullable: true }
         createdAt:       { type: string }
+
+    # ── Quest ──
+    QuestType:
+      type: string
+      enum: [kill_npc, kill_role]
+
+    QuestStatus:
+      type: string
+      enum: [active, completed, claimed]
+
+    Quest:
+      type: object
+      required: [id, title, description, questType, targetCount, requiredLevel, rewardXp, rewardGold]
+      properties:
+        id:             { type: integer }
+        title:          { type: string }
+        description:    { type: string }
+        questType:      { $ref: "#/components/schemas/QuestType" }
+        questGiverId:   { type: integer, nullable: true }
+        targetNpcId:    { type: integer, nullable: true }
+        targetRole:     { type: string, nullable: true }
+        targetCount:    { type: integer }
+        requiredLevel:  { type: integer }
+        rewardXp:       { type: integer }
+        rewardGold:     { type: integer }
+        rewardItemId:   { type: integer, nullable: true }
+
+    CharacterQuest:
+      type: object
+      required: [id, characterId, questId, status, progress]
+      properties:
+        id:          { type: integer }
+        characterId: { type: integer }
+        questId:     { type: integer }
+        status:      { $ref: "#/components/schemas/QuestStatus" }
+        progress:    { type: integer }
+        completedAt: { type: string, nullable: true }
+
+    CharacterQuestWithDetails:
+      type: object
+      required: [id, status, progress, quest]
+      properties:
+        id:          { type: integer }
+        status:      { $ref: "#/components/schemas/QuestStatus" }
+        progress:    { type: integer }
+        completedAt: { type: string, nullable: true }
+        quest:       { $ref: "#/components/schemas/Quest" }
+
+    QuestCharacterInput:
+      type: object
+      required: [characterId]
+      properties:
+        characterId: { type: integer }
+
+    AcceptQuestResult:
+      type: object
+      required: [characterQuest, quest]
+      properties:
+        characterQuest: { $ref: "#/components/schemas/CharacterQuest" }
+        quest:          { $ref: "#/components/schemas/Quest" }
+
+    ClaimQuestResult:
+      type: object
+      required: [rewards, levelUp, character, characterQuest]
+      properties:
+        rewards:
+          type: object
+          required: [xp, gold]
+          properties:
+            xp:   { type: integer }
+            gold: { type: integer }
+        levelUp:       { type: boolean }
+        character:     { $ref: "#/components/schemas/Character" }
+        characterQuest: { $ref: "#/components/schemas/CharacterQuest" }
 
     # ── Travel ──
     TravelInput:

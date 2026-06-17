@@ -110,6 +110,76 @@ export interface NpcInteraction {
   createdAt: string;
 }
 
+export type QuestType = typeof QuestType[keyof typeof QuestType];
+
+
+export const QuestType = {
+  kill_npc: 'kill_npc',
+  kill_role: 'kill_role',
+} as const;
+
+export type QuestStatus = typeof QuestStatus[keyof typeof QuestStatus];
+
+
+export const QuestStatus = {
+  active: 'active',
+  completed: 'completed',
+  claimed: 'claimed',
+} as const;
+
+export interface Quest {
+  id: number;
+  title: string;
+  description: string;
+  questType: QuestType;
+  questGiverId?: number | null;
+  targetNpcId?: number | null;
+  targetRole?: string | null;
+  targetCount: number;
+  requiredLevel: number;
+  rewardXp: number;
+  rewardGold: number;
+  rewardItemId?: number | null;
+}
+
+export interface CharacterQuest {
+  id: number;
+  characterId: number;
+  questId: number;
+  status: QuestStatus;
+  progress: number;
+  completedAt?: string | null;
+}
+
+export interface CharacterQuestWithDetails {
+  id: number;
+  status: QuestStatus;
+  progress: number;
+  completedAt?: string | null;
+  quest: Quest;
+}
+
+export interface QuestCharacterInput {
+  characterId: number;
+}
+
+export interface AcceptQuestResult {
+  characterQuest: CharacterQuest;
+  quest: Quest;
+}
+
+export type ClaimQuestResultRewards = {
+  xp: number;
+  gold: number;
+};
+
+export interface ClaimQuestResult {
+  rewards: ClaimQuestResultRewards;
+  levelUp: boolean;
+  character: Character;
+  characterQuest: CharacterQuest;
+}
+
 export interface TravelInput {
   characterId: number;
   worldId: number;

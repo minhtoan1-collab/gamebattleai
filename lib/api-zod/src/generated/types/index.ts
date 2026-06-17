@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './acceptQuestResult';
 export * from './battle';
 export * from './battleActionInput';
 export * from './battleActionInputAction';
@@ -13,7 +14,11 @@ export * from './battleActionResult';
 export * from './battleStart';
 export * from './character';
 export * from './characterInput';
+export * from './characterQuest';
+export * from './characterQuestWithDetails';
 export * from './characterStats';
+export * from './claimQuestResult';
+export * from './claimQuestResultRewards';
 export * from './equipInput';
 export * from './healthStatus';
 export * from './interactInput';
@@ -29,6 +34,10 @@ export * from './npcInteractionMetadata';
 export * from './npcInteractionType';
 export * from './npcRole';
 export * from './progressionSummary';
+export * from './quest';
+export * from './questCharacterInput';
+export * from './questStatus';
+export * from './questType';
 export * from './travelInput';
 export * from './travelResult';
 export * from './world';

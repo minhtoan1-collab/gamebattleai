@@ -4,6 +4,7 @@ import {
   npcsTable,
   charactersTable,
   npcInteractionsTable,
+  questsTable,
   INTERACTION_TYPES,
   type InteractionType,
   type NpcRole,
@@ -138,11 +139,21 @@ router.post("/interact", async (req, res) => {
     metadata: null,
   });
 
-  res.json({
+  const responseBody: Record<string, unknown> = {
     npc: { id: npc.id, name: npc.name, role: npc.role },
     interaction: { action: typedAction, message },
     availableActions: allowedActions,
-  });
+  };
+
+  if (typedAction === "quest") {
+    const availableQuests = await db
+      .select()
+      .from(questsTable)
+      .where(eq(questsTable.questGiverId, nId));
+    responseBody.availableQuests = availableQuests;
+  }
+
+  res.json(responseBody);
 });
 
 export default router;

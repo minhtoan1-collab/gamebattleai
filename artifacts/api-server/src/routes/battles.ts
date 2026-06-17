@@ -8,6 +8,7 @@ import {
   inventoryTable,
 } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { advanceQuestProgress } from "../utils/questProgress";
 import {
   StartBattleBody,
   GetBattleParams,
@@ -316,6 +317,7 @@ router.post("/battles/:id/action", async (req, res) => {
       .where(eq(characterStatsTable.characterId, character.id));
 
     await maybeDropItem(character.id, npc);
+    await advanceQuestProgress(character.id, npc.id, npc.role);
 
     if (levelUpMsg) {
       updatedBattle.log = [...updatedBattle.log, levelUpMsg];

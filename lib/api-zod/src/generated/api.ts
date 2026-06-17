@@ -246,6 +246,115 @@ export const InteractResponse = zod.object({
 
 
 /**
+ * @summary Lấy chi tiết nhiệm vụ
+ */
+export const GetQuestParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetQuestResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "questType": zod.enum(['kill_npc', 'kill_role']),
+  "questGiverId": zod.number().nullish(),
+  "targetNpcId": zod.number().nullish(),
+  "targetRole": zod.string().nullish(),
+  "targetCount": zod.number(),
+  "requiredLevel": zod.number(),
+  "rewardXp": zod.number(),
+  "rewardGold": zod.number(),
+  "rewardItemId": zod.number().nullish()
+})
+
+
+/**
+ * @summary Nhận nhiệm vụ
+ */
+export const AcceptQuestParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AcceptQuestBody = zod.object({
+  "characterId": zod.number()
+})
+
+
+/**
+ * @summary Nhận thưởng nhiệm vụ
+ */
+export const ClaimQuestParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ClaimQuestBody = zod.object({
+  "characterId": zod.number()
+})
+
+export const ClaimQuestResponse = zod.object({
+  "rewards": zod.object({
+  "xp": zod.number(),
+  "gold": zod.number()
+}),
+  "levelUp": zod.boolean(),
+  "character": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "class": zod.string(),
+  "level": zod.number(),
+  "hp": zod.number(),
+  "maxHp": zod.number(),
+  "xp": zod.number(),
+  "xpToNext": zod.number(),
+  "gold": zod.number(),
+  "worldId": zod.number().nullable(),
+  "currentLocationId": zod.number().nullish(),
+  "equippedWeapon": zod.string().nullish(),
+  "equippedArmor": zod.string().nullish(),
+  "createdAt": zod.string().optional()
+}),
+  "characterQuest": zod.object({
+  "id": zod.number(),
+  "characterId": zod.number(),
+  "questId": zod.number(),
+  "status": zod.enum(['active', 'completed', 'claimed']),
+  "progress": zod.number(),
+  "completedAt": zod.string().nullish()
+})
+})
+
+
+/**
+ * @summary Danh sách nhiệm vụ của nhân vật
+ */
+export const GetCharacterQuestsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCharacterQuestsResponseItem = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['active', 'completed', 'claimed']),
+  "progress": zod.number(),
+  "completedAt": zod.string().nullish(),
+  "quest": zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "questType": zod.enum(['kill_npc', 'kill_role']),
+  "questGiverId": zod.number().nullish(),
+  "targetNpcId": zod.number().nullish(),
+  "targetRole": zod.string().nullish(),
+  "targetCount": zod.number(),
+  "requiredLevel": zod.number(),
+  "rewardXp": zod.number(),
+  "rewardGold": zod.number(),
+  "rewardItemId": zod.number().nullish()
+})
+})
+export const GetCharacterQuestsResponse = zod.array(GetCharacterQuestsResponseItem)
+
+
+/**
  * @summary Di chuyển nhân vật đến thế giới/địa điểm
  */
 export const TravelBody = zod.object({
