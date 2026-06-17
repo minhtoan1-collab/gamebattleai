@@ -4,91 +4,256 @@ import {
   getGetCharacterQueryKey, getGetBattleQueryKey,
 } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Sword, Shield, Zap, ArrowLeft, Trophy, SkipForward, Swords, Crown, Skull, Star } from "lucide-react";
+import { ArrowLeft, Swords, Crown, SkipForward, Trophy, Skull, Star, Zap, Shield } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { BattleArenaScene } from "@/components/world-scene";
 
-/* ── World theme ─────────────────────────────────────────── */
-const WORLD_GRAD: Record<string, string> = {
-  Nature:         "from-green-950 via-stone-950 to-black",
-  "Dark Fantasy": "from-violet-950 via-slate-950 to-black",
-  Dragon:         "from-red-950 via-orange-950 to-black",
-  Steampunk:      "from-amber-950 via-zinc-950 to-black",
-  Mythic:         "from-yellow-950 via-indigo-950 to-black",
+/* ── World themes ─────────────────────────────────────── */
+const THEME_BG: Record<string, string> = {
+  Nature:         "linear-gradient(180deg, #0a1a0a 0%, #0f2a0f 40%, #0a1a0a 100%)",
+  "Dark Fantasy": "linear-gradient(180deg, #0a0010 0%, #150025 40%, #0a0010 100%)",
+  Dragon:         "linear-gradient(180deg, #1a0500 0%, #2a0a00 40%, #1a0500 100%)",
+  Steampunk:      "linear-gradient(180deg, #0f0c00 0%, #1f1500 40%, #0f0c00 100%)",
+  Mythic:         "linear-gradient(180deg, #05000f 0%, #0f0020 40%, #05000f 100%)",
 };
-const WORLD_ACCENT: Record<string, string> = {
-  Nature: "#4ade80", "Dark Fantasy": "#c084fc",
-  Dragon: "#fb923c", Steampunk: "#fbbf24", Mythic: "#fde68a",
+const THEME_FOG: Record<string, string> = {
+  Nature: "#00ff6622", "Dark Fantasy": "#8800ff22", Dragon: "#ff440022",
+  Steampunk: "#ffaa0022", Mythic: "#aa00ff22",
 };
-const WORLD_GLOW: Record<string, string> = {
-  Nature: "rgba(74,222,128,0.25)", "Dark Fantasy": "rgba(192,132,252,0.25)",
-  Dragon: "rgba(251,146,60,0.25)", Steampunk: "rgba(251,191,36,0.25)", Mythic: "rgba(253,230,138,0.25)",
+const THEME_ACCENT: Record<string, string> = {
+  Nature: "#4ade80", "Dark Fantasy": "#c084fc", Dragon: "#fb923c",
+  Steampunk: "#fbbf24", Mythic: "#fde68a",
 };
 
-/* ── Class sprites ─────────────────────────────────────────── */
-const CLASS_EMOJI: Record<string, string> = {
-  "Chiến Binh": "⚔️", "Pháp Sư": "🔮", "Thích Khách": "🗡️", "Cung Thủ": "🏹",
-};
+/* ── Class art ─────────────────────────────────────────── */
 const CLASS_COLOR: Record<string, string> = {
-  "Chiến Binh": "#ff4040", "Pháp Sư": "#7070ff", "Thích Khách": "#c070ff", "Cung Thủ": "#40c060",
+  "Chiến Binh": "#ff4040", "Pháp Sư": "#8888ff", "Thích Khách": "#cc44ff", "Cung Thủ": "#44cc66",
 };
-function npcEmoji(type: string, isBoss: boolean) {
-  if (isBoss) return "👹";
-  const map: Record<string, string> = { Beast:"🐺", Undead:"💀", Elemental:"🔥", Mechanical:"🤖", Divine:"👼", Human:"🧝" };
-  return map[type] ?? "👾";
-}
+const CLASS_GLOW: Record<string, string> = {
+  "Chiến Binh": "#ff000088", "Pháp Sư": "#4444ff88", "Thích Khách": "#aa00ff88", "Cung Thủ": "#00ff4488",
+};
 
-/* ── Actions ───────────────────────────────────────────────── */
-const ACTIONS = [
-  { key: "attack"  as const, label: "TẤN CÔNG",  emoji: "⚔️", desc: "Bình thường",   bg: "rgba(220,38,38,0.15)",  border: "#dc2626", glow: "rgba(220,38,38,0.4)"  },
-  { key: "skill"   as const, label: "KỸ NĂNG",   emoji: "⚡", desc: "×1.8 sát thương", bg: "rgba(59,130,246,0.15)", border: "#3b82f6", glow: "rgba(59,130,246,0.4)" },
-  { key: "defend"  as const, label: "PHÒNG THỦ", emoji: "🛡️", desc: "Giảm 50% dmg",  bg: "rgba(34,197,94,0.15)", border: "#22c55e", glow: "rgba(34,197,94,0.4)"  },
-  { key: "flee"    as const, label: "TẨU THOÁT", emoji: "💨", desc: "50% thành công", bg: "rgba(161,161,170,0.1)", border: "#71717a", glow: "rgba(113,113,122,0.3)" },
-];
+type CharClass = "Chiến Binh" | "Pháp Sư" | "Thích Khách" | "Cung Thủ";
 
-/* ── HP bar ────────────────────────────────────────────────── */
-function HpBar({ current, max, color, glow }: { current: number; max: number; color: string; glow: string }) {
-  const pct = Math.max(0, Math.min(100, max > 0 ? (current / max) * 100 : 0));
-  const low = pct < 25;
+/* ── Stylized character art using CSS ─────────────────── */
+function CharacterArt({ cls, flip = false, dead = false, anim }: {
+  cls: string; flip?: boolean; dead?: boolean; anim?: "attack" | "hit" | "idle" | null;
+}) {
+  const color = CLASS_COLOR[cls] ?? "#f0c040";
+  const glow  = CLASS_GLOW[cls]  ?? "#f0c04088";
+
+  const configs: Record<string, { body: string; weapon: string; aura: string }> = {
+    "Chiến Binh":  { body: "⚔️", weapon: "🗡️", aura: "🔴" },
+    "Pháp Sư":    { body: "🔮", weapon: "✨", aura: "💜" },
+    "Thích Khách":{ body: "🗡️", weapon: "⚡", aura: "🟣" },
+    "Cung Thủ":   { body: "🏹", weapon: "💚", aura: "🟢" },
+  };
+  const c = configs[cls] ?? configs["Chiến Binh"];
+  void c;
+
+  const animStyle = anim === "attack"
+    ? { animation: `${flip ? "attackLungeRight" : "attackLunge"} 0.65s ease-in-out` }
+    : anim === "hit"
+    ? { animation: "hitShake 0.4s ease-in-out, hitFlash 0.4s ease-in-out" }
+    : { animation: "idleBob 2.5s ease-in-out infinite" };
+
   return (
-    <div className="w-full h-5 rounded-sm relative overflow-hidden" style={{ background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)" }}>
-      <div
-        className="h-full rounded-sm transition-all duration-700"
-        style={{
-          width: `${pct}%`,
-          background: `linear-gradient(90deg, ${color}, ${color}cc)`,
-          boxShadow: low ? `0 0 12px ${glow}, 0 0 24px ${glow}` : `0 0 6px ${glow}`,
-          animation: low ? "pulse 1s ease-in-out infinite" : undefined,
-        }}
-      />
-      <span className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-white/90 select-none tracking-wider">
-        {current} / {max}
-      </span>
+    <div className="flex flex-col items-center" style={{ opacity: dead ? 0.3 : 1, filter: dead ? "grayscale(1)" : "none" }}>
+      {/* Aura ring */}
+      <div className="relative flex items-end justify-center" style={{ width: 160, height: 200 }}>
+        {/* Outer aura */}
+        <div style={{
+          position: "absolute",
+          bottom: 0, left: "50%", transform: "translateX(-50%)",
+          width: 120, height: 120,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${glow} 0%, transparent 70%)`,
+          animation: "pulse 2s ease-in-out infinite",
+          zIndex: 0,
+        }} />
+
+        {/* Ground shadow ellipse */}
+        <div style={{
+          position: "absolute",
+          bottom: -8,
+          left: "50%", transform: "translateX(-50%)",
+          width: 100, height: 20,
+          background: `radial-gradient(ellipse, ${color}66 0%, transparent 70%)`,
+          borderRadius: "50%",
+          animation: "groundPulse 2s ease-in-out infinite",
+          zIndex: 0,
+        }} />
+
+        {/* Main character emoji — very large */}
+        <div style={{
+          position: "relative",
+          zIndex: 1,
+          fontSize: "8rem",
+          lineHeight: 1,
+          transform: flip ? "scaleX(-1)" : "none",
+          filter: `drop-shadow(0 0 16px ${color}) drop-shadow(0 0 32px ${glow})`,
+          ...animStyle,
+        }}>
+          {cls === "Chiến Binh"  ? "⚔️"
+           : cls === "Pháp Sư"   ? "🔮"
+           : cls === "Thích Khách" ? "🗡️"
+           : cls === "Cung Thủ"  ? "🏹"
+           : "⚔️"}
+        </div>
+      </div>
     </div>
   );
 }
 
-/* ── Floating damage ───────────────────────────────────────── */
-function DmgFloat({ value, crit, side }: { value: number; crit?: boolean; side: "left" | "right" }) {
+function NpcArt({ type, isBoss, dead = false, anim }: {
+  type: string; isBoss: boolean; dead?: boolean; anim?: "attack" | "hit" | "idle" | null;
+}) {
+  const color = isBoss ? "#ff2020" : "#ff8800";
+  const glow  = isBoss ? "#ff000099" : "#ff880066";
+
+  const emoji = isBoss ? "👹"
+    : type === "Beast"      ? "🐺"
+    : type === "Undead"     ? "💀"
+    : type === "Elemental"  ? "🔥"
+    : type === "Mechanical" ? "🤖"
+    : type === "Divine"     ? "👼"
+    : "👾";
+
+  const animStyle = anim === "attack"
+    ? { animation: "attackLungeRight 0.65s ease-in-out" }
+    : anim === "hit"
+    ? { animation: "hitShake 0.4s ease-in-out, hitFlash 0.4s" }
+    : { animation: `idleBob ${isBoss ? "2s" : "3s"} ease-in-out infinite` };
+
   return (
-    <div
-      className="absolute pointer-events-none select-none font-black"
-      style={{
-        top: "20%",
-        [side]: "10%",
-        fontSize: crit ? "3rem" : "2rem",
-        color: crit ? "#ff4040" : "#ffd700",
-        textShadow: crit ? "0 0 20px #ff000099, 0 0 40px #ff000066" : "0 0 12px #ffd70099",
-        animation: "floatUp 1.4s ease-out forwards",
-        zIndex: 30,
-      }}
-    >
-      {crit && <span style={{ fontSize: "0.9rem", display: "block", color: "#ff6060" }}>CHÍ MẠNG!</span>}
+    <div className="flex flex-col items-center" style={{ opacity: dead ? 0.25 : 1, filter: dead ? "grayscale(1)" : "none" }}>
+      <div className="relative flex items-end justify-center" style={{ width: 160, height: 200 }}>
+        <div style={{
+          position: "absolute",
+          bottom: 0, left: "50%", transform: "translateX(-50%)",
+          width: isBoss ? 160 : 110, height: isBoss ? 160 : 110,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${glow} 0%, transparent 70%)`,
+          animation: `pulse ${isBoss ? "1.5s" : "2.5s"} ease-in-out infinite`,
+          zIndex: 0,
+        }} />
+        <div style={{
+          position: "absolute",
+          bottom: -8, left: "50%", transform: "translateX(-50%)",
+          width: 100, height: 20,
+          background: `radial-gradient(ellipse, ${color}55 0%, transparent 70%)`,
+          borderRadius: "50%",
+          animation: "groundPulse 2s ease-in-out infinite",
+          zIndex: 0,
+        }} />
+        <div style={{
+          position: "relative",
+          zIndex: 1,
+          fontSize: isBoss ? "9rem" : "7rem",
+          lineHeight: 1,
+          transform: "scaleX(-1)",
+          filter: `drop-shadow(0 0 16px ${color}) drop-shadow(0 0 40px ${glow})`,
+          ...animStyle,
+        }}>
+          {emoji}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Skill beam effect ────────────────────────────────── */
+function SkillBeam({ active, direction, color }: { active: boolean; direction: "ltr" | "rtl"; color: string }) {
+  if (!active) return null;
+  return (
+    <div style={{
+      position: "absolute",
+      top: "45%",
+      left: direction === "ltr" ? "20%" : "auto",
+      right: direction === "rtl" ? "20%" : "auto",
+      width: "60%",
+      height: 6,
+      background: `linear-gradient(${direction === "ltr" ? "90deg" : "270deg"}, transparent, ${color}, ${color}ff, transparent)`,
+      boxShadow: `0 0 20px ${color}, 0 0 40px ${color}88`,
+      borderRadius: 3,
+      animation: "beamShoot 0.5s ease-out forwards",
+      zIndex: 25,
+      pointerEvents: "none",
+    }} />
+  );
+}
+
+/* ── Damage number ───────────────────────────────────── */
+function DmgNumber({ value, crit, x }: { value: number; crit: boolean; x: "left" | "center" | "right" }) {
+  const posMap = { left: "15%", center: "50%", right: "75%" };
+  return (
+    <div style={{
+      position: "absolute",
+      top: "30%",
+      left: posMap[x],
+      transform: "translateX(-50%)",
+      fontSize: crit ? "4rem" : "2.5rem",
+      fontWeight: 900,
+      color: crit ? "#ff4040" : "#ffd700",
+      textShadow: crit
+        ? "0 0 20px #ff0000, 0 0 40px #ff000088, 0 0 60px #ff000044"
+        : "0 0 12px #ffd700, 0 0 24px #ffd70066",
+      animation: "floatUp 1.4s ease-out forwards",
+      zIndex: 30,
+      pointerEvents: "none",
+      whiteSpace: "nowrap",
+      lineHeight: 1,
+      fontFamily: "serif",
+    }}>
+      {crit && <div style={{ fontSize: "1rem", color: "#ff6060", letterSpacing: "0.2em", marginBottom: 4 }}>CHÍ MẠNG!</div>}
       -{value}
     </div>
   );
 }
+
+/* ── Full-width HP bar ────────────────────────────────── */
+function HudBar({ current, max, color, glow, label, level }: {
+  current: number; max: number; color: string; glow: string; label: string; level: number;
+}) {
+  const pct = Math.max(0, Math.min(100, max > 0 ? (current / max) * 100 : 0));
+  const low = pct < 25;
+  return (
+    <div className="flex items-center gap-3">
+      <div className="text-xs font-black font-mono whitespace-nowrap" style={{ color, minWidth: 100, textShadow: `0 0 8px ${glow}` }}>
+        {label} <span className="opacity-50">Lv.{level}</span>
+      </div>
+      <div className="flex-1 relative h-6 rounded-sm overflow-hidden" style={{
+        background: "rgba(0,0,0,0.7)",
+        border: `1px solid ${color}33`,
+      }}>
+        <div style={{
+          width: `${pct}%`,
+          height: "100%",
+          background: `linear-gradient(90deg, ${color}88, ${color})`,
+          boxShadow: `0 0 10px ${glow}`,
+          transition: "width 0.8s ease",
+          borderRadius: "2px",
+          animation: low ? "pulse 1s ease-in-out infinite" : undefined,
+        }} />
+        {/* Tick marks */}
+        {[25, 50, 75].map(t => (
+          <div key={t} style={{ position: "absolute", top: 0, left: `${t}%`, width: 1, height: "100%", background: "rgba(255,255,255,0.08)" }} />
+        ))}
+        <span className="absolute inset-0 flex items-center px-2 text-xs font-black text-white/80 select-none" style={{ fontSize: 11 }}>
+          {current} / {max}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Action button ───────────────────────────────────── */
+const ACTIONS = [
+  { key: "attack"  as const, label: "TẤN CÔNG",   emoji: "⚔️",  sub: "Đòn thường",     col: "#dc2626", glow: "#dc262688" },
+  { key: "skill"   as const, label: "KỸ NĂNG",    emoji: "⚡",  sub: "×1.8 Sát thương",col: "#3b82f6", glow: "#3b82f688" },
+  { key: "defend"  as const, label: "PHÒNG THỦ",  emoji: "🛡️",  sub: "Giảm 50% DMG",  col: "#22c55e", glow: "#22c55e88" },
+  { key: "flee"    as const, label: "TẨU THOÁT",  emoji: "💨",  sub: "50% thành công", col: "#71717a", glow: "#71717a66" },
+];
 
 export default function Battle({ id }: { id: number }) {
   const { data: battle, isLoading } = useGetBattle(id, { query: { enabled: !!id } });
@@ -100,69 +265,72 @@ export default function Battle({ id }: { id: number }) {
   const qc = useQueryClient();
   const logRef = useRef<HTMLDivElement>(null);
 
-  const [attackAnim, setAttackAnim]     = useState<"player" | "enemy" | null>(null);
-  const [hitAnim,    setHitAnim]        = useState<"player" | "enemy" | null>(null);
-  const [dmgNum,     setDmgNum]         = useState<{ value: number; crit: boolean; type: "player" | "enemy" } | null>(null);
-  const [screenFlash, setScreenFlash]   = useState<"red" | "gold" | null>(null);
-  const [prevLog,    setPrevLog]        = useState<string[]>([]);
-  const [shakeArena, setShakeArena]     = useState(false);
+  const [charAnim,   setCharAnim]   = useState<"attack" | "hit" | "idle" | null>("idle");
+  const [npcAnim,    setNpcAnim]    = useState<"attack" | "hit" | "idle" | null>("idle");
+  const [dmg,        setDmg]        = useState<{ value: number; crit: boolean; side: "left"|"right" } | null>(null);
+  const [screenFlash,setScreenFlash]= useState<"red"|"blue"|"gold"|null>(null);
+  const [beam,       setBeam]       = useState<{ dir: "ltr"|"rtl"; col: string } | null>(null);
+  const [prevLog,    setPrevLog]    = useState<string[]>([]);
+  const [showResult, setShowResult] = useState(false);
 
   useEffect(() => {
     if (!battle?.log || battle.log.length <= prevLog.length) return;
     const newLines = battle.log.slice(prevLog.length);
     setPrevLog(battle.log);
     for (const line of newLines) {
-      const dmgMatch = line.match(/gây (\d+) sát thương/);
-      const isCrit   = /CHÍ MẠNG|chí mạng/i.test(line);
-      if (dmgMatch) {
-        const dmg = parseInt(dmgMatch[1]);
+      const match  = line.match(/gây (\d+) sát thương/);
+      const isCrit = /CHÍ MẠNG|chí mạng/i.test(line);
+      if (match) {
+        const val = parseInt(match[1]);
         const isPlayerHit = line.includes(npc?.name ?? "___") && line.includes("gây");
-        setHitAnim(isPlayerHit ? "player" : "enemy");
-        setDmgNum({ value: dmg, crit: isCrit, type: isPlayerHit ? "player" : "enemy" });
-        setScreenFlash(isPlayerHit ? "red" : "gold");
-        setShakeArena(true);
-        setTimeout(() => { setHitAnim(null); setDmgNum(null); setScreenFlash(null); setShakeArena(false); }, 1400);
+        if (isPlayerHit) {
+          setNpcAnim("attack");
+          setBeam({ dir: "rtl", col: "#ff4040" });
+          setTimeout(() => { setCharAnim("hit"); setNpcAnim("idle"); setBeam(null); }, 350);
+          setScreenFlash("red");
+          setDmg({ value: val, crit: isCrit, side: "left" });
+        } else {
+          setCharAnim("attack");
+          setBeam({ dir: "ltr", col: character ? (CLASS_COLOR[character.class] ?? "#f0c040") : "#f0c040" });
+          setTimeout(() => { setNpcAnim("hit"); setCharAnim("idle"); setBeam(null); }, 350);
+          setScreenFlash("gold");
+          setDmg({ value: val, crit: isCrit, side: "right" });
+        }
+        setTimeout(() => { setDmg(null); setScreenFlash(null); setCharAnim("idle"); setNpcAnim("idle"); }, 1500);
       }
     }
-  }, [battle?.log, npc?.name, prevLog.length]);
+  }, [battle?.log, npc?.name, character, prevLog.length]);
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [battle?.log]);
 
-  if (isLoading || !battle) {
+  useEffect(() => {
+    if (battle && battle.status !== "active") {
+      setTimeout(() => setShowResult(true), 400);
+    }
+  }, [battle?.status]);
+
+  if (isLoading || !battle || !character || !npc) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-6" style={{ background: "radial-gradient(ellipse at center, #150825 0%, #000 100%)" }}>
-        <div className="text-6xl" style={{ animation: "idleBob 1.5s ease-in-out infinite" }}>⚔️</div>
-        <div className="font-serif text-xl tracking-widest" style={{ color: "#f0c040", textShadow: "0 0 20px #f0c04066" }}>
-          ĐANG TẢI TRẬN CHIẾN…
-        </div>
-      </div>
-    );
-  }
-  if (!character || !npc) {
-    return (
-      <div className="text-center py-16" style={{ color: "#ffffff66" }}>
-        <p>Không tìm thấy trận chiến.</p>
-        <Link href="/worlds"><button className="mt-4 px-6 py-2 border border-white/20 rounded-lg hover:bg-white/10 text-white/60 transition-colors">Quay lại</button></Link>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4" style={{ background: "#050010" }}>
+        <div style={{ fontSize: "5rem", animation: "idleBob 1.2s ease-in-out infinite" }}>⚔️</div>
+        <div className="font-serif text-lg tracking-widest animate-pulse" style={{ color: "#f0c040" }}>ĐANG TẢI TRẬN CHIẾN…</div>
       </div>
     );
   }
 
   const theme  = world?.theme ?? "Nature";
-  const grad   = WORLD_GRAD[theme] ?? WORLD_GRAD["Nature"];
-  const accent = WORLD_ACCENT[theme] ?? "#f0c040";
-  const glow   = WORLD_GLOW[theme] ?? "rgba(240,192,64,0.25)";
+  const bg     = THEME_BG[theme] ?? THEME_BG["Nature"];
+  const fog    = THEME_FOG[theme] ?? "#ffffff11";
+  const accent = THEME_ACCENT[theme] ?? "#f0c040";
   const isOver = battle.status !== "active";
   const won    = battle.status === "won";
   const lost   = battle.status === "lost";
-  const fled   = battle.status === "fled";
-  const charColor = CLASS_COLOR[character.class] ?? "#f0c040";
   const isBoss = npc.isBoss;
+  const charCol = CLASS_COLOR[character.class as CharClass] ?? "#f0c040";
 
   const doAction = async (action: typeof ACTIONS[0]["key"]) => {
-    setAttackAnim("player");
-    setTimeout(() => setAttackAnim(null), 700);
     await battleAction.mutateAsync({ id, data: { action } });
     qc.invalidateQueries({ queryKey: getGetBattleQueryKey(id) });
     qc.invalidateQueries({ queryKey: getGetCharacterQueryKey(battle.characterId) });
@@ -170,250 +338,215 @@ export default function Battle({ id }: { id: number }) {
 
   return (
     <div
-      className={`relative -mx-4 -mt-8 min-h-[calc(100vh-4rem)] bg-gradient-to-b ${grad} overflow-hidden flex flex-col`}
-      style={{ userSelect: "none" }}
+      className="relative -mx-4 -mt-8 overflow-hidden flex flex-col"
+      style={{
+        minHeight: "calc(100vh - 4rem)",
+        background: bg,
+      }}
     >
-      {/* Background scene */}
-      <BattleArenaScene theme={theme} />
+      {/* ── LAYERED BACKGROUND ──────────────────────── */}
 
-      {/* Screen flash overlay */}
-      {screenFlash && (
-        <div
-          className="absolute inset-0 pointer-events-none z-40"
-          style={{
-            background: screenFlash === "red"
-              ? "radial-gradient(ellipse at center, rgba(255,0,0,0.3) 0%, transparent 70%)"
-              : "radial-gradient(ellipse at center, rgba(255,200,0,0.25) 0%, transparent 70%)",
-            animation: "hitFlash 0.6s ease-out forwards",
-          }}
-        />
-      )}
+      {/* Grid floor */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: `linear-gradient(${fog} 1px, transparent 1px), linear-gradient(90deg, ${fog} 1px, transparent 1px)`,
+        backgroundSize: "80px 80px",
+        backgroundPosition: "center bottom",
+        maskImage: "linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 50%)",
+        WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 50%)",
+        zIndex: 0,
+      }} />
+
+      {/* Fog layer */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: `radial-gradient(ellipse at 30% 80%, ${fog} 0%, transparent 50%),
+                     radial-gradient(ellipse at 70% 80%, ${fog} 0%, transparent 50%)`,
+        animation: "fogDrift 8s ease-in-out infinite",
+        zIndex: 1,
+      }} />
 
       {/* Boss red vignette */}
       {isBoss && (
-        <div
-          className="absolute inset-0 pointer-events-none z-0"
-          style={{
-            background: "radial-gradient(ellipse at center, transparent 30%, rgba(180,0,0,0.25) 100%)",
-            animation: "pulse 2s ease-in-out infinite",
-          }}
-        />
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: "radial-gradient(ellipse at center, transparent 20%, rgba(180,0,0,0.3) 100%)",
+          animation: "pulse 2s ease-in-out infinite",
+          zIndex: 2,
+        }} />
       )}
 
       {/* Scanlines */}
-      <div className="absolute inset-0 pointer-events-none z-[1]" style={{
-        backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px)",
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px)",
+        zIndex: 2,
       }} />
 
+      {/* Screen flash */}
+      {screenFlash && (
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: screenFlash === "red"
+            ? "radial-gradient(ellipse at center, rgba(255,0,0,0.25) 0%, transparent 70%)"
+            : "radial-gradient(ellipse at center, rgba(255,220,0,0.2) 0%, transparent 70%)",
+          animation: "hitFlash 0.5s ease-out forwards",
+          zIndex: 35,
+        }} />
+      )}
+
       {/* ── TOP HUD ─────────────────────────────────── */}
-      <div className="relative z-20 flex items-center justify-between px-4 py-2 shrink-0" style={{
-        background: "linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%)",
+      <div className="relative z-20 px-4 pt-3 pb-2 shrink-0" style={{
+        background: "linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 100%)",
         borderBottom: `1px solid ${accent}22`,
       }}>
-        <Link href={`/worlds/${npc.worldId}`}>
-          <button className="flex items-center gap-2 text-sm font-serif transition-all hover:opacity-100 opacity-60" style={{ color: accent }}>
-            <ArrowLeft className="w-4 h-4" />
-            {world?.name ?? "Thế Giới"}
-          </button>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          {isBoss && (
-            <span className="text-xs font-black tracking-widest px-2 py-0.5 rounded border animate-pulse"
-              style={{ color: "#ff4040", borderColor: "#ff404066", background: "rgba(255,64,64,0.1)", fontSize: "10px" }}>
-              ☠ BOSS
+        <div className="flex items-center justify-between mb-2">
+          <Link href={`/worlds/${npc.worldId}`}>
+            <button className="flex items-center gap-1.5 text-xs font-mono opacity-50 hover:opacity-100 transition-opacity" style={{ color: accent }}>
+              <ArrowLeft className="w-3.5 h-3.5" /> {world?.name ?? "Thế Giới"}
+            </button>
+          </Link>
+          <div className="flex items-center gap-2">
+            {isBoss && (
+              <span className="font-black text-[10px] tracking-widest px-2 py-0.5 rounded border animate-pulse"
+                style={{ color: "#ff4040", borderColor: "#ff404055", background: "rgba(255,64,64,0.1)" }}>
+                ☠ BOSS
+              </span>
+            )}
+            <span className="font-mono text-[10px] tracking-widest px-2 py-0.5 rounded" style={{
+              color: accent, background: `${accent}11`, border: `1px solid ${accent}33`
+            }}>
+              LƯỢT {battle.currentTurn}
             </span>
-          )}
-          <div className="font-mono text-xs px-3 py-1 rounded" style={{ background: "rgba(0,0,0,0.5)", border: `1px solid ${accent}44`, color: accent }}>
-            LƯỢT {battle.currentTurn}
           </div>
+        </div>
+
+        {/* HP bars MMORPG style */}
+        <div className="space-y-1.5">
+          <HudBar
+            current={battle.characterHp} max={character.maxHp}
+            color={charCol} glow={charCol + "88"}
+            label={character.name} level={character.level}
+          />
+          <HudBar
+            current={battle.npcHp} max={npc.maxHp ?? npc.hp}
+            color={isBoss ? "#ff2020" : "#ff6622"} glow={isBoss ? "#ff000099" : "#ff662266"}
+            label={npc.name} level={npc.level}
+          />
         </div>
       </div>
 
-      {/* ── MAIN ARENA ─────────────────────────────── */}
-      <div
-        className="relative z-10 flex-1 flex flex-col"
-        style={{ animation: shakeArena ? "hpShake 0.4s ease-in-out" : undefined }}
-      >
+      {/* ── ARENA ───────────────────────────────────── */}
+      <div className="relative z-10 flex-1 flex flex-col">
 
-        {/* Status title bar */}
-        <div className="text-center py-2">
-          <span className="font-mono text-xs uppercase tracking-widest" style={{ color: isOver ? (won ? "#4ade80" : lost ? "#ff4040" : "#aaa") : accent }}>
-            {isOver
-              ? won  ? "⚔️ CHIẾN THẮNG VINH QUANG!"
-              : lost ? "💀 ĐÃ NGÃ XUỐNG..."
-              :        "💨 ĐÃ THÁO CHẠY"
-              : `⚔️ ĐANG GIAO CHIẾN — LƯỢT ${battle.currentTurn}`}
-          </span>
-        </div>
+        {/* Characters stage */}
+        <div className="relative flex items-end justify-between px-4 pt-4" style={{ minHeight: 260 }}>
 
-        {/* VS Stage */}
-        <div className="relative flex-1 flex items-center justify-center min-h-[260px] px-4">
+          {/* Beam attack effect */}
+          {beam && <SkillBeam active direction={beam.dir} color={beam.col} />}
 
-          {/* Ground line */}
-          <div className="absolute bottom-0 left-0 right-0 h-16"
-            style={{ background: "linear-gradient(to top, rgba(0,0,0,0.6), transparent)" }} />
-          <div className="absolute bottom-8 left-[10%] right-[10%] h-px"
-            style={{ background: `linear-gradient(90deg, transparent, ${accent}44, transparent)`, animation: "groundPulse 3s ease-in-out infinite" }} />
+          {/* Damage number */}
+          {dmg && <DmgNumber value={dmg.value} crit={dmg.crit} x={dmg.side === "left" ? "left" : "right"} />}
 
-          {/* Player character */}
-          <div className="flex-1 flex flex-col items-center gap-3 relative">
-            {dmgNum?.type === "player" && <DmgFloat value={dmgNum.value} crit={dmgNum.crit} side="right" />}
-
-            <div
-              className="text-8xl drop-shadow-2xl"
-              style={{
-                animation: attackAnim === "player"
-                  ? "attackLunge 0.7s ease-in-out"
-                  : hitAnim === "player"
-                  ? "hitFlash 0.5s ease-in-out, hpShake 0.4s"
-                  : "idleBob 2.5s ease-in-out infinite",
-                filter: battle.characterHp <= 0
-                  ? "grayscale(1) opacity(0.4)"
-                  : `drop-shadow(0 0 20px ${charColor}99)`,
-                fontSize: "5rem",
-              }}
-            >
-              {CLASS_EMOJI[character.class] ?? "⚔️"}
-            </div>
-
-            <div className="w-full max-w-[180px] space-y-1.5">
-              <div className="text-center">
-                <span className="font-serif font-black text-sm tracking-wider" style={{ color: charColor, textShadow: `0 0 12px ${charColor}66` }}>
-                  {character.name}
-                </span>
-              </div>
-              <div className="text-center text-xs opacity-50 font-mono -mt-0.5">
-                {character.class} · Cấp {character.level}
-              </div>
-              <HpBar current={battle.characterHp} max={character.maxHp} color={charColor} glow={`${charColor}88`} />
+          {/* Player side */}
+          <div className="flex flex-col items-center gap-1">
+            <CharacterArt cls={character.class} anim={charAnim} dead={battle.characterHp <= 0} />
+            <div className="text-center mt-1">
+              <span className="font-serif font-black text-xs tracking-wider" style={{ color: charCol, textShadow: `0 0 8px ${charCol}88` }}>
+                {character.class}
+              </span>
             </div>
           </div>
 
-          {/* VS center */}
-          <div className="flex flex-col items-center gap-3 px-4 shrink-0 pb-8">
-            <div style={{ position: "relative" }}>
-              <Swords className="w-10 h-10" style={{ color: accent, filter: `drop-shadow(0 0 8px ${accent})` }} />
-              {!isOver && (
-                <div className="absolute -inset-3 rounded-full pointer-events-none"
-                  style={{ background: `radial-gradient(circle, ${glow} 0%, transparent 70%)`, animation: "pulse 2s ease-in-out infinite" }} />
-              )}
-            </div>
-            <span className="font-black text-xs tracking-widest" style={{ color: accent + "66" }}>VS</span>
+          {/* Center VS */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-8 flex flex-col items-center gap-2 z-10">
+            <Swords className="w-8 h-8" style={{ color: accent, filter: `drop-shadow(0 0 8px ${accent})` }} />
+            <span className="font-black text-sm tracking-widest" style={{ color: accent + "66" }}>VS</span>
           </div>
 
-          {/* NPC enemy */}
-          <div className="flex-1 flex flex-col items-center gap-3 relative">
-            {dmgNum?.type === "enemy" && <DmgFloat value={dmgNum.value} crit={dmgNum.crit} side="left" />}
-
-            <div
-              style={{
-                fontSize: "5rem",
-                display: "inline-block",
-                transform: "scaleX(-1)",
-                animation: hitAnim === "enemy"
-                  ? "hitFlash 0.5s ease-in-out, hpShake 0.4s"
-                  : "idleBob 3s ease-in-out 0.5s infinite",
-                filter: battle.npcHp <= 0
-                  ? "grayscale(1) opacity(0.3)"
-                  : isBoss
-                  ? "drop-shadow(0 0 24px #ff000099)"
-                  : "drop-shadow(0 0 12px rgba(255,140,0,0.6))",
-              }}
-            >
-              {npcEmoji(npc.type, isBoss)}
-            </div>
-
-            <div className="w-full max-w-[180px] space-y-1.5">
-              <div className="flex items-center justify-center gap-1.5">
-                {isBoss && <Crown className="w-3.5 h-3.5" style={{ color: "#ff4040" }} />}
-                <span className="font-serif font-black text-sm tracking-wider" style={{
-                  color: isBoss ? "#ff4040" : "#fb923c",
-                  textShadow: isBoss ? "0 0 16px #ff000099" : "0 0 8px rgba(251,146,60,0.5)",
-                }}>
-                  {npc.name}
+          {/* Enemy side */}
+          <div className="flex flex-col items-center gap-1">
+            {isBoss && (
+              <div className="flex items-center gap-1 mb-1">
+                <Crown className="w-4 h-4" style={{ color: "#ff4040" }} />
+                <span className="font-black text-[10px] tracking-widest" style={{ color: "#ff4040", textShadow: "0 0 8px #ff000099" }}>
+                  BOSS
                 </span>
+                <Crown className="w-4 h-4" style={{ color: "#ff4040" }} />
               </div>
-              <div className="text-center text-xs opacity-50 font-mono -mt-0.5">
-                {npc.type} · Cấp {npc.level}
-              </div>
-              <HpBar
-                current={battle.npcHp}
-                max={npc.maxHp ?? npc.hp}
-                color={isBoss ? "#ff4040" : "#fb923c"}
-                glow={isBoss ? "rgba(255,64,64,0.8)" : "rgba(251,146,60,0.6)"}
-              />
+            )}
+            <NpcArt type={npc.type} isBoss={isBoss} anim={npcAnim} dead={battle.npcHp <= 0} />
+            <div className="text-center mt-1">
+              <span className="font-serif font-black text-xs tracking-wider" style={{
+                color: isBoss ? "#ff4040" : "#ff8833",
+                textShadow: `0 0 8px ${isBoss ? "#ff000088" : "#ff883366"}`,
+              }}>
+                {npc.type}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Reward hint */}
+        {/* Ground line */}
+        <div className="mx-8 h-px" style={{
+          background: `linear-gradient(90deg, transparent, ${accent}33, transparent)`,
+          animation: "groundPulse 3s ease-in-out infinite",
+        }} />
+
+        {/* Reward info */}
         {!isOver && (
-          <div className="flex justify-center gap-6 py-2 text-xs font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>
-            <span className="flex items-center gap-1.5">
-              <Star className="w-3 h-3" style={{ color: "#f0c04066" }} />
-              <span style={{ color: "#f0c040aa" }}>{npc.xpReward}</span> XP
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span style={{ color: "#fbbf24" }}>◆</span>
-              <span style={{ color: "#fbbf24aa" }}>{npc.goldReward}</span> gold
-            </span>
+          <div className="flex justify-center gap-6 py-2 text-xs font-mono" style={{ color: "rgba(255,255,255,0.25)" }}>
+            <span><span style={{ color: "#f0c040aa" }}>{npc.xpReward}</span> XP</span>
+            <span>·</span>
+            <span><span style={{ color: "#fbbf24aa" }}>{npc.goldReward}</span> Gold</span>
           </div>
         )}
 
         {/* ── RESULT OVERLAY ─────────────────────── */}
-        {isOver && (
-          <div className="mx-4 mb-4 rounded-xl p-6 text-center relative overflow-hidden"
-            style={{
-              background: won  ? "linear-gradient(135deg, rgba(34,197,94,0.15), rgba(0,0,0,0.7))"
-                        : lost ? "linear-gradient(135deg, rgba(220,38,38,0.2), rgba(0,0,0,0.7))"
-                        :        "rgba(0,0,0,0.5)",
-              border: won  ? "2px solid rgba(74,222,128,0.5)"
-                    : lost ? "2px solid rgba(220,38,38,0.5)"
-                    :        "1px solid rgba(255,255,255,0.1)",
-              boxShadow: won  ? "0 0 40px rgba(74,222,128,0.2), inset 0 0 40px rgba(74,222,128,0.05)"
-                        : lost ? "0 0 40px rgba(220,38,38,0.2), inset 0 0 40px rgba(220,38,38,0.05)"
-                        : undefined,
-            }}
-          >
+        {isOver && showResult && (
+          <div className="mx-4 my-2 rounded-2xl relative overflow-hidden" style={{
+            background: won
+              ? "linear-gradient(135deg, rgba(0,100,0,0.5), rgba(0,0,0,0.8))"
+              : lost
+              ? "linear-gradient(135deg, rgba(120,0,0,0.5), rgba(0,0,0,0.8))"
+              : "rgba(0,0,0,0.6)",
+            border: `2px solid ${won ? "#4ade80" : lost ? "#ff4040" : "#555"}55`,
+            boxShadow: won ? "0 0 60px rgba(74,222,128,0.25), inset 0 0 60px rgba(74,222,128,0.05)"
+                      : lost ? "0 0 60px rgba(255,0,0,0.25), inset 0 0 60px rgba(255,0,0,0.05)"
+                      : undefined,
+            animation: "rise 0.5s ease-out",
+            padding: "1.5rem",
+            textAlign: "center",
+          }}>
             {won && (
               <>
-                <div className="text-6xl mb-3" style={{ animation: "rise 0.6s ease-out, idleBob 2s ease-in-out 0.6s infinite" }}>🏆</div>
-                <p className="font-serif font-black text-3xl mb-2 uppercase tracking-widest" style={{ color: "#4ade80", textShadow: "0 0 30px rgba(74,222,128,0.6)" }}>
-                  CHIẾN THẮNG!
-                </p>
-                <div className="flex justify-center gap-6 mt-3 text-sm">
-                  <span className="font-bold" style={{ color: "#f0c040" }}>+{battle.xpGained} XP</span>
-                  <span className="font-bold" style={{ color: "#fbbf24" }}>+{battle.goldGained} Gold</span>
+                <div style={{ fontSize: "4rem", animation: "rise 0.6s ease-out, idleBob 2s ease-in-out 0.6s infinite" }}>🏆</div>
+                <p className="font-serif font-black text-3xl mt-2 uppercase tracking-widest" style={{ color: "#4ade80", textShadow: "0 0 30px rgba(74,222,128,0.7)" }}>CHIẾN THẮNG!</p>
+                <div className="flex justify-center gap-8 mt-3 text-sm font-mono">
+                  <span><span style={{ color: "#f0c040", fontWeight: 900 }}>+{battle.xpGained}</span> XP</span>
+                  <span><span style={{ color: "#fbbf24", fontWeight: 900 }}>+{battle.goldGained}</span> Gold</span>
                 </div>
               </>
             )}
             {lost && (
               <>
-                <div className="text-6xl mb-3" style={{ animation: "rise 0.6s ease-out" }}>💀</div>
-                <p className="font-serif font-black text-3xl mb-2 uppercase tracking-widest" style={{ color: "#ff4040", textShadow: "0 0 30px rgba(255,64,64,0.6)" }}>
-                  THẤT BẠI...
-                </p>
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>Mất 10% gold. HP về 1. Hãy thử lại!</p>
+                <div style={{ fontSize: "4rem" }}>💀</div>
+                <p className="font-serif font-black text-3xl mt-2 uppercase tracking-widest" style={{ color: "#ff4040", textShadow: "0 0 30px rgba(255,0,0,0.7)" }}>THẤT BẠI…</p>
+                <p className="text-sm mt-2 opacity-40">Mất 10% gold · HP về 1 · Hãy thử lại!</p>
               </>
             )}
-            {fled && (
+            {battle.status === "fled" && (
               <>
-                <div className="text-5xl mb-3">💨</div>
-                <p className="font-serif font-bold text-xl" style={{ color: "rgba(255,255,255,0.6)" }}>Đã tháo chạy an toàn.</p>
+                <div style={{ fontSize: "3rem" }}>💨</div>
+                <p className="font-serif text-xl mt-2" style={{ color: "#aaa" }}>Đã tháo chạy an toàn.</p>
               </>
             )}
-            <div className="flex gap-3 justify-center mt-5">
+            <div className="flex gap-3 justify-center mt-4">
               <Link href={`/worlds/${npc.worldId}`}>
-                <button className="px-5 py-2.5 rounded-lg font-serif text-sm uppercase tracking-wider font-bold border-2 transition-all hover:opacity-80"
-                  style={{ borderColor: accent, color: accent, background: "transparent" }}>
+                <button className="px-5 py-2.5 rounded-xl font-serif font-black text-sm uppercase tracking-wider border-2 transition-all hover:opacity-80"
+                  style={{ borderColor: accent, color: accent }}>
                   Tiếp Tục Khám Phá
                 </button>
               </Link>
               {won && (
                 <Link href={`/characters/${battle.characterId}`}>
-                  <button className="px-5 py-2.5 rounded-lg font-serif text-sm uppercase tracking-wider font-black transition-all hover:opacity-90"
-                    style={{ background: "linear-gradient(135deg, #f0c040, #c09030)", color: "#000" }}>
+                  <button className="px-5 py-2.5 rounded-xl font-serif font-black text-sm uppercase tracking-wider transition-all hover:opacity-90"
+                    style={{ background: "linear-gradient(135deg,#f0c040,#c09030)", color: "#000" }}>
                     Xem Nhân Vật
                   </button>
                 </Link>
@@ -422,78 +555,88 @@ export default function Battle({ id }: { id: number }) {
           </div>
         )}
 
-        {/* ── ACTION BUTTONS ─────────────────────── */}
+        {/* ── SKILL BUTTONS ─────────────────────── */}
         {!isOver && (
-          <div
-            className="shrink-0 px-3 pb-3 pt-2"
-            style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%)" }}
-          >
+          <div className="shrink-0 px-3 pb-3 pt-1" style={{
+            background: "linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 100%)",
+          }}>
             <div className="grid grid-cols-4 gap-2 max-w-2xl mx-auto">
               {ACTIONS.map(a => (
                 <button
                   key={a.key}
                   onClick={() => doAction(a.key)}
                   disabled={battleAction.isPending}
-                  className="flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all duration-150 active:scale-95 select-none"
                   style={{
-                    background: battleAction.isPending ? "rgba(255,255,255,0.03)" : a.bg,
-                    border: `2px solid ${battleAction.isPending ? "rgba(255,255,255,0.08)" : a.border}`,
-                    boxShadow: battleAction.isPending ? "none" : `0 0 12px ${a.glow}`,
-                    opacity: battleAction.isPending ? 0.3 : 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 6,
+                    paddingTop: 14,
+                    paddingBottom: 14,
+                    paddingLeft: 8,
+                    paddingRight: 8,
+                    borderRadius: 12,
+                    border: `2px solid ${battleAction.isPending ? "rgba(255,255,255,0.06)" : a.col + "88"}`,
+                    background: battleAction.isPending ? "rgba(255,255,255,0.02)" : `linear-gradient(180deg, ${a.col}22 0%, ${a.col}08 100%)`,
+                    boxShadow: battleAction.isPending ? "none" : `0 0 16px ${a.glow}, inset 0 1px 0 ${a.col}33`,
+                    opacity: battleAction.isPending ? 0.25 : 1,
                     cursor: battleAction.isPending ? "not-allowed" : "pointer",
-                    clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                    transition: "all 0.15s",
+                    clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))",
                   }}
+                  onMouseEnter={e => {
+                    if (!battleAction.isPending) {
+                      (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+                      (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 24px ${a.glow}, inset 0 1px 0 ${a.col}55`;
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.transform = "";
+                    (e.currentTarget as HTMLElement).style.boxShadow = battleAction.isPending ? "none" : `0 0 16px ${a.glow}, inset 0 1px 0 ${a.col}33`;
+                  }}
+                  onMouseDown={e => { (e.currentTarget as HTMLElement).style.transform = "scale(0.96)"; }}
+                  onMouseUp={e => { (e.currentTarget as HTMLElement).style.transform = ""; }}
                 >
-                  <span style={{ fontSize: "1.6rem", lineHeight: 1 }}>{a.emoji}</span>
-                  <span className="text-[11px] font-black tracking-wider text-white">{a.label}</span>
-                  <span className="text-[9px] font-mono" style={{ color: "rgba(255,255,255,0.35)" }}>{a.desc}</span>
+                  <span style={{ fontSize: "2rem", lineHeight: 1, filter: `drop-shadow(0 0 8px ${a.col})` }}>{a.emoji}</span>
+                  <span style={{ fontSize: "11px", fontWeight: 900, letterSpacing: "0.1em", color: "#fff", fontFamily: "serif" }}>{a.label}</span>
+                  <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{a.sub}</span>
                 </button>
               ))}
             </div>
             {battleAction.isPending && (
-              <div className="text-center mt-1.5 font-mono text-xs animate-pulse" style={{ color: accent }}>
-                ··· đang xử lý ···
-              </div>
+              <p className="text-center font-mono text-xs mt-1.5 animate-pulse" style={{ color: accent }}>··· xử lý ···</p>
             )}
           </div>
         )}
 
         {/* ── BATTLE LOG ─────────────────────────── */}
-        <div className="shrink-0 mx-3 mb-3 rounded-xl overflow-hidden"
-          style={{ border: `1px solid ${accent}22`, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}>
-          <div className="flex items-center gap-2 px-3 py-1.5 border-b" style={{ borderColor: `${accent}22` }}>
+        <div className="shrink-0 mx-3 mb-2 rounded-xl overflow-hidden" style={{
+          background: "rgba(0,0,0,0.7)",
+          border: `1px solid ${accent}18`,
+          backdropFilter: "blur(8px)",
+        }}>
+          <div className="flex items-center gap-2 px-3 py-1.5 border-b" style={{ borderColor: `${accent}18` }}>
             <Swords className="w-3 h-3" style={{ color: accent }} />
-            <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
-              Nhật Ký Chiến Đấu
-            </span>
+            <span className="font-mono text-[9px] uppercase tracking-widest opacity-30">Nhật Ký Chiến Đấu</span>
           </div>
-          <div ref={logRef} className="h-32 overflow-y-auto p-2.5 space-y-1 text-xs"
-            style={{
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-            }}>
+          <div ref={logRef} className="h-28 overflow-y-auto p-3 space-y-1" style={{ scrollbarWidth: "none" }}>
             {battle.log.map((line, i) => {
               const isLatest  = i >= battle.log.length - 2;
               const isCrit    = /CHÍ MẠNG|chí mạng/i.test(line);
               const isLevel   = /LEVEL UP/i.test(line);
               const isStart   = i === 0;
               const isVictory = /bị đánh bại|ngã xuống/i.test(line);
-
-              let color = "rgba(255,255,255,0.3)";
+              let color = "rgba(255,255,255,0.25)";
               if (isStart)   color = accent;
               if (isLevel)   color = "#fbbf24";
-              if (isCrit)    color = "#ff6060";
+              if (isCrit)    color = "#ff5050";
               if (isVictory) color = "#4ade80";
-              if (isLatest && !isCrit && !isLevel && !isVictory && !isStart) color = "rgba(255,255,255,0.85)";
-
+              if (isLatest && !isCrit && !isLevel && !isVictory && !isStart) color = "rgba(255,255,255,0.8)";
               return (
-                <div key={i} className="leading-relaxed flex gap-2">
-                  <span className="font-mono text-[9px] shrink-0 mt-0.5" style={{ color: "rgba(255,255,255,0.15)" }}>{String(i+1).padStart(2, "0")}</span>
-                  <span style={{
-                    color,
-                    fontWeight: isCrit || isLevel || isVictory ? "bold" : undefined,
-                    textShadow: isCrit ? "0 0 8px rgba(255,96,96,0.5)" : isLevel ? "0 0 8px rgba(251,191,36,0.5)" : undefined,
-                  }}>
+                <div key={i} className="flex gap-2 text-xs leading-relaxed">
+                  <span className="font-mono text-[9px] opacity-20 shrink-0 mt-0.5">{String(i+1).padStart(2,"0")}</span>
+                  <span style={{ color, fontWeight: isCrit || isLevel || isVictory ? 700 : 400,
+                    textShadow: isCrit ? "0 0 8px #ff505088" : isLevel ? "0 0 8px #fbbf2488" : undefined }}>
                     {line}
                   </span>
                 </div>
