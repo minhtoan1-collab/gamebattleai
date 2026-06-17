@@ -167,12 +167,43 @@ export const ListWorldNpcsResponseItem = zod.object({
   "hp": zod.number(),
   "maxHp": zod.number().optional(),
   "worldId": zod.number(),
+  "locationId": zod.number().nullish(),
   "difficulty": zod.string(),
   "xpReward": zod.number().optional(),
   "goldReward": zod.number().optional(),
-  "isBoss": zod.boolean().optional()
+  "isBoss": zod.boolean().optional(),
+  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
+  "description": zod.string(),
+  "isInteractable": zod.boolean()
 })
 export const ListWorldNpcsResponse = zod.array(ListWorldNpcsResponseItem)
+
+
+/**
+ * @summary NPC trong địa điểm
+ */
+export const ListLocationNpcsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListLocationNpcsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "level": zod.number(),
+  "hp": zod.number(),
+  "maxHp": zod.number().optional(),
+  "worldId": zod.number(),
+  "locationId": zod.number().nullish(),
+  "difficulty": zod.string(),
+  "xpReward": zod.number().optional(),
+  "goldReward": zod.number().optional(),
+  "isBoss": zod.boolean().optional(),
+  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
+  "description": zod.string(),
+  "isInteractable": zod.boolean()
+})
+export const ListLocationNpcsResponse = zod.array(ListLocationNpcsResponseItem)
 
 
 /**
@@ -232,7 +263,24 @@ export const TravelResponse = zod.object({
   "name": zod.string(),
   "description": zod.string(),
   "dangerLevel": zod.number()
-}),zod.null()]).optional()
+}),zod.null()]).optional(),
+  "availableNpcs": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "level": zod.number(),
+  "hp": zod.number(),
+  "maxHp": zod.number().optional(),
+  "worldId": zod.number(),
+  "locationId": zod.number().nullish(),
+  "difficulty": zod.string(),
+  "xpReward": zod.number().optional(),
+  "goldReward": zod.number().optional(),
+  "isBoss": zod.boolean().optional(),
+  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
+  "description": zod.string(),
+  "isInteractable": zod.boolean()
+}))
 })
 
 
@@ -247,10 +295,14 @@ export const ListNpcsResponseItem = zod.object({
   "hp": zod.number(),
   "maxHp": zod.number().optional(),
   "worldId": zod.number(),
+  "locationId": zod.number().nullish(),
   "difficulty": zod.string(),
   "xpReward": zod.number().optional(),
   "goldReward": zod.number().optional(),
-  "isBoss": zod.boolean().optional()
+  "isBoss": zod.boolean().optional(),
+  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
+  "description": zod.string(),
+  "isInteractable": zod.boolean()
 })
 export const ListNpcsResponse = zod.array(ListNpcsResponseItem)
 
@@ -270,10 +322,14 @@ export const GetNpcResponse = zod.object({
   "hp": zod.number(),
   "maxHp": zod.number().optional(),
   "worldId": zod.number(),
+  "locationId": zod.number().nullish(),
   "difficulty": zod.string(),
   "xpReward": zod.number().optional(),
   "goldReward": zod.number().optional(),
-  "isBoss": zod.boolean().optional()
+  "isBoss": zod.boolean().optional(),
+  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
+  "description": zod.string(),
+  "isInteractable": zod.boolean()
 })
 
 

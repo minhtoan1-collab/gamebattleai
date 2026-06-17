@@ -808,6 +808,83 @@ export function useListWorldNpcs<TData = Awaited<ReturnType<typeof listWorldNpcs
 
 
 
+export const getListLocationNpcsUrl = (id: number,) => {
+
+
+
+
+  return `/api/locations/${id}/npcs`
+}
+
+/**
+ * @summary NPC trong địa điểm
+ */
+export const listLocationNpcs = async (id: number, options?: RequestInit): Promise<Npc[]> => {
+
+  return customFetch<Npc[]>(getListLocationNpcsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListLocationNpcsQueryKey = (id: number,) => {
+    return [
+    `/api/locations/${id}/npcs`
+    ] as const;
+    }
+
+
+export const getListLocationNpcsQueryOptions = <TData = Awaited<ReturnType<typeof listLocationNpcs>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLocationNpcs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLocationNpcsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLocationNpcs>>> = ({ signal }) => listLocationNpcs(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLocationNpcs>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListLocationNpcsQueryResult = NonNullable<Awaited<ReturnType<typeof listLocationNpcs>>>
+export type ListLocationNpcsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary NPC trong địa điểm
+ */
+
+export function useListLocationNpcs<TData = Awaited<ReturnType<typeof listLocationNpcs>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLocationNpcs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListLocationNpcsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
 export const getGetLocationUrl = (id: number,) => {
 
 

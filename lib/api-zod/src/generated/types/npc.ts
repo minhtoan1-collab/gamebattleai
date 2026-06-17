@@ -5,6 +5,7 @@
  * RPG World - Hệ thống nhập vai chiến đấu NPC
  * OpenAPI spec version: 0.1.0
  */
+import type { NpcRole } from './npcRole';
 
 export interface Npc {
   id: number;
@@ -14,8 +15,13 @@ export interface Npc {
   hp: number;
   maxHp?: number;
   worldId: number;
+  /** @nullable */
+  locationId?: number | null;
   difficulty: string;
   xpReward?: number;
   goldReward?: number;
   isBoss?: boolean;
+  role: NpcRole;
+  description: string;
+  isInteractable: boolean;
 }

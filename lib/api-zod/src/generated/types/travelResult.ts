@@ -7,10 +7,12 @@
  */
 import type { Character } from './character';
 import type { Location } from './location';
+import type { Npc } from './npc';
 import type { World } from './world';
 
 export interface TravelResult {
   character: Character;
   world: World;
   location?: Location | null;
+  availableNpcs: Npc[];
 }

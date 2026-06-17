@@ -197,6 +197,27 @@ paths:
                 items:
                   $ref: "#/components/schemas/Npc"
 
+  /locations/{id}/npcs:
+    get:
+      operationId: listLocationNpcs
+      tags: [npcs]
+      summary: NPC trong địa điểm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Npc"
+
   /locations/{id}:
     get:
       operationId: getLocation
@@ -500,7 +521,7 @@ components:
 
     TravelResult:
       type: object
-      required: [character, world]
+      required: [character, world, availableNpcs]
       properties:
         character: { $ref: "#/components/schemas/Character" }
         world:     { $ref: "#/components/schemas/World" }
@@ -508,6 +529,10 @@ components:
           oneOf:
             - $ref: "#/components/schemas/Location"
             - type: "null"
+        availableNpcs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Npc"
 
     # ── World ──
     World:
@@ -523,21 +548,29 @@ components:
         isBossWorld: { type: boolean }
 
     # ── NPC ──
+    NpcRole:
+      type: string
+      enum: [enemy, merchant, guard, quest_giver, boss]
+
     Npc:
       type: object
-      required: [id, name, type, level, hp, worldId, difficulty]
+      required: [id, name, type, level, hp, worldId, difficulty, role, description, isInteractable]
       properties:
-        id:          { type: integer }
-        name:        { type: string }
-        type:        { type: string }
-        level:       { type: integer }
-        hp:          { type: integer }
-        maxHp:       { type: integer }
-        worldId:     { type: integer }
-        difficulty:  { type: string }
-        xpReward:    { type: integer }
-        goldReward:  { type: integer }
-        isBoss:      { type: boolean }
+        id:             { type: integer }
+        name:           { type: string }
+        type:           { type: string }
+        level:          { type: integer }
+        hp:             { type: integer }
+        maxHp:          { type: integer }
+        worldId:        { type: integer }
+        locationId:     { type: ["integer", "null"] }
+        difficulty:     { type: string }
+        xpReward:       { type: integer }
+        goldReward:     { type: integer }
+        isBoss:         { type: boolean }
+        role:           { $ref: "#/components/schemas/NpcRole" }
+        description:    { type: string }
+        isInteractable: { type: boolean }
 
     # ── Battle ──
     Battle:

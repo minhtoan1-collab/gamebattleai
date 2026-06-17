@@ -20,6 +20,7 @@ export * from './inventoryItem';
 export * from './leaderboardEntry';
 export * from './location';
 export * from './npc';
+export * from './npcRole';
 export * from './progressionSummary';
 export * from './travelInput';
 export * from './travelResult';

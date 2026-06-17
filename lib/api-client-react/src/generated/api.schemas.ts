@@ -71,11 +71,16 @@ export interface World {
   isBossWorld?: boolean;
 }
 
-export interface TravelResult {
-  character: Character;
-  world: World;
-  location?: Location | null;
-}
+export type NpcRole = typeof NpcRole[keyof typeof NpcRole];
+
+
+export const NpcRole = {
+  enemy: 'enemy',
+  merchant: 'merchant',
+  guard: 'guard',
+  quest_giver: 'quest_giver',
+  boss: 'boss',
+} as const;
 
 export interface Npc {
   id: number;
@@ -85,10 +90,22 @@ export interface Npc {
   hp: number;
   maxHp?: number;
   worldId: number;
+  /** @nullable */
+  locationId?: number | null;
   difficulty: string;
   xpReward?: number;
   goldReward?: number;
   isBoss?: boolean;
+  role: NpcRole;
+  description: string;
+  isInteractable: boolean;
+}
+
+export interface TravelResult {
+  character: Character;
+  world: World;
+  location?: Location | null;
+  availableNpcs: Npc[];
 }
 
 export interface Battle {

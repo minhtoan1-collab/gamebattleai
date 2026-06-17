@@ -4,6 +4,7 @@ import {
   charactersTable,
   worldsTable,
   locationsTable,
+  npcsTable,
 } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 
@@ -94,7 +95,15 @@ router.post("/travel", async (req, res) => {
         .then((r) => r[0] ?? null)
     : null;
 
-  res.json({ character: updated, world, location: locationData });
+  const availableNpcs = resolvedLocationId
+    ? await db
+        .select()
+        .from(npcsTable)
+        .where(eq(npcsTable.locationId, resolvedLocationId))
+        .orderBy(npcsTable.level)
+    : [];
+
+  res.json({ character: updated, world, location: locationData, availableNpcs });
 });
 
 export default router;
