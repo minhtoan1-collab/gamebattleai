@@ -1,22 +1,33 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: RPG World - Hệ thống nhập vai chiến đấu NPC
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: characters
+    description: Nhân vật người chơi
+  - name: worlds
+    description: Thế giới game
+  - name: npcs
+    description: NPC trong thế giới
+  - name: battles
+    description: Chiến đấu
+  - name: inventory
+    description: Kho đồ và trang bị
+  - name: progression
+    description: Tiến trình và xếp hạng
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +35,335 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── CHARACTERS ──────────────────────────────────────────────
+  /characters:
+    get:
+      operationId: listCharacters
+      tags: [characters]
+      summary: Danh sách nhân vật
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Character"
+    post:
+      operationId: createCharacter
+      tags: [characters]
+      summary: Tạo nhân vật mới
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CharacterInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+
+  /characters/{id}:
+    get:
+      operationId: getCharacter
+      tags: [characters]
+      summary: Chi tiết nhân vật
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+    delete:
+      operationId: deleteCharacter
+      tags: [characters]
+      summary: Xoá nhân vật
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /characters/{id}/stats:
+    get:
+      operationId: getCharacterStats
+      tags: [characters]
+      summary: Chỉ số chi tiết nhân vật
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterStats"
+
+  # ── WORLDS ──────────────────────────────────────────────────
+  /worlds:
+    get:
+      operationId: listWorlds
+      tags: [worlds]
+      summary: Danh sách thế giới
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/World"
+
+  /worlds/{id}:
+    get:
+      operationId: getWorld
+      tags: [worlds]
+      summary: Chi tiết thế giới
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/World"
+
+  /worlds/{id}/npcs:
+    get:
+      operationId: listWorldNpcs
+      tags: [worlds]
+      summary: NPC trong thế giới
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Npc"
+
+  # ── NPCS ────────────────────────────────────────────────────
+  /npcs:
+    get:
+      operationId: listNpcs
+      tags: [npcs]
+      summary: Tất cả NPC
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Npc"
+
+  /npcs/{id}:
+    get:
+      operationId: getNpc
+      tags: [npcs]
+      summary: Chi tiết NPC
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Npc"
+
+  # ── BATTLES ─────────────────────────────────────────────────
+  /battles:
+    get:
+      operationId: listBattles
+      tags: [battles]
+      summary: Lịch sử chiến đấu
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Battle"
+    post:
+      operationId: startBattle
+      tags: [battles]
+      summary: Bắt đầu trận chiến
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BattleStart"
+      responses:
+        "201":
+          description: Battle started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Battle"
+
+  /battles/{id}:
+    get:
+      operationId: getBattle
+      tags: [battles]
+      summary: Chi tiết trận chiến
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Battle"
+
+  /battles/{id}/action:
+    post:
+      operationId: battleAction
+      tags: [battles]
+      summary: Thực hiện hành động chiến đấu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BattleActionInput"
+      responses:
+        "200":
+          description: Action result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BattleActionResult"
+
+  # ── INVENTORY ───────────────────────────────────────────────
+  /characters/{id}/inventory:
+    get:
+      operationId: getInventory
+      tags: [inventory]
+      summary: Kho đồ nhân vật
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryItem"
+
+  /characters/{id}/equip:
+    post:
+      operationId: equipItem
+      tags: [inventory]
+      summary: Trang bị vật phẩm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EquipInput"
+      responses:
+        "200":
+          description: Equipped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+
+  # ── PROGRESSION ─────────────────────────────────────────────
+  /progression/leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [progression]
+      summary: Bảng xếp hạng
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  /progression/summary:
+    get:
+      operationId: getProgressionSummary
+      tags: [progression]
+      summary: Tổng quan tiến trình game
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressionSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +371,157 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    # ── Character ──
+    Character:
+      type: object
+      required: [id, name, class, level, hp, maxHp, xp, xpToNext, gold, worldId]
+      properties:
+        id:          { type: integer }
+        name:        { type: string }
+        class:       { type: string }
+        level:       { type: integer }
+        hp:          { type: integer }
+        maxHp:       { type: integer }
+        xp:          { type: integer }
+        xpToNext:    { type: integer }
+        gold:        { type: integer }
+        worldId:     { type: ["integer", "null"] }
+        equippedWeapon:  { type: ["string", "null"] }
+        equippedArmor:   { type: ["string", "null"] }
+        createdAt:   { type: string }
+
+    CharacterInput:
+      type: object
+      required: [name, class]
+      properties:
+        name:  { type: string, minLength: 1 }
+        class: { type: string }
+
+    CharacterStats:
+      type: object
+      required: [characterId, attack, defense, speed, critRate, totalBattles, wins, losses]
+      properties:
+        characterId:   { type: integer }
+        attack:        { type: integer }
+        defense:       { type: integer }
+        speed:         { type: integer }
+        critRate:      { type: integer }
+        totalBattles:  { type: integer }
+        wins:          { type: integer }
+        losses:        { type: integer }
+
+    # ── World ──
+    World:
+      type: object
+      required: [id, name, description, theme, minLevel, npcCount]
+      properties:
+        id:          { type: integer }
+        name:        { type: string }
+        description: { type: string }
+        theme:       { type: string }
+        minLevel:    { type: integer }
+        npcCount:    { type: integer }
+        isBossWorld: { type: boolean }
+
+    # ── NPC ──
+    Npc:
+      type: object
+      required: [id, name, type, level, hp, worldId, difficulty]
+      properties:
+        id:          { type: integer }
+        name:        { type: string }
+        type:        { type: string }
+        level:       { type: integer }
+        hp:          { type: integer }
+        maxHp:       { type: integer }
+        worldId:     { type: integer }
+        difficulty:  { type: string }
+        xpReward:    { type: integer }
+        goldReward:  { type: integer }
+        isBoss:      { type: boolean }
+
+    # ── Battle ──
+    Battle:
+      type: object
+      required: [id, characterId, npcId, status, currentTurn, log]
+      properties:
+        id:            { type: integer }
+        characterId:   { type: integer }
+        npcId:         { type: integer }
+        status:        { type: string }
+        currentTurn:   { type: integer }
+        characterHp:   { type: integer }
+        npcHp:         { type: integer }
+        xpGained:      { type: ["integer", "null"] }
+        goldGained:    { type: ["integer", "null"] }
+        log:           { type: array, items: { type: string } }
+        createdAt:     { type: string }
+
+    BattleStart:
+      type: object
+      required: [characterId, npcId]
+      properties:
+        characterId: { type: integer }
+        npcId:       { type: integer }
+
+    BattleActionInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [attack, skill, defend, flee]
+
+    BattleActionResult:
+      type: object
+      required: [battle, log, isOver]
+      properties:
+        battle: { $ref: "#/components/schemas/Battle" }
+        log:    { type: array, items: { type: string } }
+        isOver: { type: boolean }
+        result: { type: ["string", "null"] }
+
+    # ── Inventory ──
+    InventoryItem:
+      type: object
+      required: [id, characterId, name, type, rarity]
+      properties:
+        id:          { type: integer }
+        characterId: { type: integer }
+        name:        { type: string }
+        type:        { type: string }
+        rarity:      { type: string }
+        attackBonus: { type: integer }
+        defenseBonus: { type: integer }
+        isEquipped:  { type: boolean }
+
+    EquipInput:
+      type: object
+      required: [itemId]
+      properties:
+        itemId: { type: integer }
+
+    # ── Progression ──
+    LeaderboardEntry:
+      type: object
+      required: [rank, characterId, name, class, level, totalBattles, wins]
+      properties:
+        rank:         { type: integer }
+        characterId:  { type: integer }
+        name:         { type: string }
+        class:        { type: string }
+        level:        { type: integer }
+        totalBattles: { type: integer }
+        wins:         { type: integer }
+
+    ProgressionSummary:
+      type: object
+      required: [totalCharacters, totalBattles, totalNpcsDefeated, topClass, worldsExplored]
+      properties:
+        totalCharacters:   { type: integer }
+        totalBattles:      { type: integer }
+        totalNpcsDefeated: { type: integer }
+        topClass:          { type: string }
+        worldsExplored:    { type: integer }

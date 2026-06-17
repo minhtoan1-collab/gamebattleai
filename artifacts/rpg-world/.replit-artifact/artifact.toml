@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "RPG World - Nhập Vai Chiến Đấu"
+version = "1.0.0"
+id = "artifacts/rpg-world"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25808
+
+[services.development]
+run = "pnpm --filter @workspace/rpg-world run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/rpg-world", "run", "build" ]
+publicDir = "artifacts/rpg-world/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25808"
+BASE_PATH = "/"
