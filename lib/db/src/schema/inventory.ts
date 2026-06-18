@@ -6,6 +6,9 @@ export type ItemType = typeof ITEM_TYPES[number];
 export const ITEM_RARITIES = ["Thường", "Hiếm", "Sử Thi", "Huyền Thoại"] as const;
 export type ItemRarity = typeof ITEM_RARITIES[number];
 
+export const EQUIP_SLOTS = ["weapon", "armor", "accessory"] as const;
+export type EquipSlot = typeof EQUIP_SLOTS[number];
+
 export const inventoryTable = pgTable("inventory", {
   id: serial("id").primaryKey(),
   characterId: integer("character_id").notNull(),
@@ -14,6 +17,7 @@ export const inventoryTable = pgTable("inventory", {
   rarity: text("rarity").$type<ItemRarity>().notNull().default("Thường"),
   attackBonus: integer("attack_bonus").notNull().default(0),
   defenseBonus: integer("defense_bonus").notNull().default(0),
+  equipSlot: text("equip_slot").$type<EquipSlot>(),
   isEquipped: boolean("is_equipped").notNull().default(false),
   source: text("source").notNull().default("drop"),
 });

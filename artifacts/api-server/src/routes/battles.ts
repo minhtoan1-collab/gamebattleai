@@ -10,6 +10,7 @@ import {
 import { eq } from "drizzle-orm";
 import { advanceQuestProgress } from "../utils/questProgress";
 import { adjustWorldReputation } from "../utils/reputation";
+import { getEffectiveStats } from "../utils/effectiveStats";
 import {
   StartBattleBody,
   GetBattleParams,
@@ -98,6 +99,7 @@ async function maybeDropItem(characterId: number, npc: { isBoss: boolean; diffic
     characterId,
     name: `${name} [${rarity}]`,
     type,
+    equipSlot: type as "weapon" | "armor",
     rarity,
     attackBonus: atkBonus,
     defenseBonus: defBonus,
@@ -182,18 +184,17 @@ router.post("/battles/:id/action", async (req, res) => {
     .select()
     .from(charactersTable)
     .where(eq(charactersTable.id, battle.characterId));
-  const [stats] = await db
-    .select()
-    .from(characterStatsTable)
-    .where(eq(characterStatsTable.characterId, battle.characterId));
+  const effectiveStats = await getEffectiveStats(battle.characterId);
   const [npc] = await db
     .select()
     .from(npcsTable)
     .where(eq(npcsTable.id, battle.npcId));
 
-  if (!character || !stats || !npc) {
+  if (!character || !npc) {
     return res.status(404).json({ error: "Missing battle participants" });
   }
+
+  const { base: stats, effectiveAttack, effectiveDefense, critRate } = effectiveStats;
 
   const newLog: string[] = [];
   let { characterHp, npcHp } = battle;
@@ -214,11 +215,11 @@ router.post("/battles/:id/action", async (req, res) => {
     isDefending = true;
     newLog.push(`${character.name} vào tư thế phòng thủ! Giảm 50% sát thương nhận vào.`);
   } else if (action === "skill") {
-    const skillDmg = Math.max(1, Math.round(stats.attack * 1.8 - npc.hp * 0.02));
+    const skillDmg = Math.max(1, Math.round(effectiveAttack * 1.8 - npc.hp * 0.02));
     npcHp = Math.max(0, npcHp - skillDmg);
     newLog.push(`${character.name} sử dụng KỸ NĂNG! Gây ${skillDmg} sát thương lên ${npc.name}!`);
   } else {
-    const { dmg, crit } = calcDamage(stats.attack, Math.max(0, npc.level * 0.5), stats.critRate);
+    const { dmg, crit } = calcDamage(effectiveAttack, Math.max(0, npc.level * 0.5), critRate);
     npcHp = Math.max(0, npcHp - dmg);
     newLog.push(
       crit
@@ -239,7 +240,7 @@ router.post("/battles/:id/action", async (req, res) => {
     const npcCrit = npc.level * 2;
     const { dmg: npcDmg, crit: npcCritHit } = calcDamage(
       npcAttack,
-      stats.defense,
+      effectiveDefense,
       npcCrit,
       isDefending
     );

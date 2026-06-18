@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { inventoryTable, charactersTable } from "@workspace/db";
+import { inventoryTable, charactersTable, EQUIP_SLOTS } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { GetInventoryParams, EquipItemParams, EquipItemBody } from "@workspace/api-zod";
+import type { EquipSlot } from "@workspace/db";
 
 const router = Router();
 
@@ -33,24 +34,42 @@ router.post("/characters/:id/equip", async (req, res) => {
     .where(and(eq(inventoryTable.id, itemId), eq(inventoryTable.characterId, characterId)));
   if (!item) return res.status(404).json({ error: "Item not found" });
 
+  const slot: EquipSlot | null = item.equipSlot ?? deriveSlotFromType(item.type);
+  if (!slot) {
+    return res.status(400).json({ error: "Item cannot be equipped (no equip slot)" });
+  }
+
   await db
     .update(inventoryTable)
     .set({ isEquipped: false })
-    .where(and(eq(inventoryTable.characterId, characterId), eq(inventoryTable.type, item.type)));
+    .where(and(eq(inventoryTable.characterId, characterId), eq(inventoryTable.equipSlot, slot)));
 
   await db
     .update(inventoryTable)
     .set({ isEquipped: true })
     .where(eq(inventoryTable.id, itemId));
 
-  const equippedField = item.type === "weapon" ? "equippedWeapon" : "equippedArmor";
+  const slotField = slotToCharacterField(slot);
   const [character] = await db
     .update(charactersTable)
-    .set({ [equippedField]: item.name })
+    .set({ [slotField]: item.name })
     .where(eq(charactersTable.id, characterId))
     .returning();
 
   res.json(character);
 });
+
+function deriveSlotFromType(type: string): EquipSlot | null {
+  if (type === "weapon") return "weapon";
+  if (type === "armor") return "armor";
+  if (type === "accessory") return "accessory";
+  return null;
+}
+
+function slotToCharacterField(slot: EquipSlot): "equippedWeapon" | "equippedArmor" | "equippedAccessory" {
+  if (slot === "weapon") return "equippedWeapon";
+  if (slot === "armor") return "equippedArmor";
+  return "equippedAccessory";
+}
 
 export default router;

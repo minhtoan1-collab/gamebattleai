@@ -16,6 +16,7 @@ export const charactersTable = pgTable("characters", {
   currentLocationId: integer("current_location_id"),
   equippedWeapon: text("equipped_weapon"),
   equippedArmor: text("equipped_armor"),
+  equippedAccessory: text("equipped_accessory"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
