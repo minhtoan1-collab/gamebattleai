@@ -1,0 +1,193 @@
+import { db } from "../index";
+import { shopItemsTable } from "../schema/shop";
+
+const SHOP_ITEMS = [
+  // ── NPC 6: Thương Nhân Lạc Lối (World 1, Rừng Cổ Đại, cấp 1–3) ──
+  {
+    npcId: 6,
+    name: "Kiếm Gỗ",
+    type: "weapon" as const,
+    rarity: "Thường" as const,
+    attackBonus: 3,
+    defenseBonus: 0,
+    price: 80,
+    sellPrice: 30,
+    stock: -1,
+    requiredLevel: 1,
+    isAvailable: true,
+  },
+  {
+    npcId: 6,
+    name: "Đoản Kiếm Sắt",
+    type: "weapon" as const,
+    rarity: "Thường" as const,
+    attackBonus: 5,
+    defenseBonus: 0,
+    price: 150,
+    sellPrice: 60,
+    stock: -1,
+    requiredLevel: 2,
+    isAvailable: true,
+  },
+  {
+    npcId: 6,
+    name: "Áo Vải Thô",
+    type: "armor" as const,
+    rarity: "Thường" as const,
+    attackBonus: 0,
+    defenseBonus: 2,
+    price: 60,
+    sellPrice: 20,
+    stock: -1,
+    requiredLevel: 1,
+    isAvailable: true,
+  },
+  {
+    npcId: 6,
+    name: "Giáp Da",
+    type: "armor" as const,
+    rarity: "Thường" as const,
+    attackBonus: 0,
+    defenseBonus: 4,
+    price: 120,
+    sellPrice: 45,
+    stock: -1,
+    requiredLevel: 2,
+    isAvailable: true,
+  },
+  {
+    npcId: 6,
+    name: "Kiếm Bạc",
+    type: "weapon" as const,
+    rarity: "Hiếm" as const,
+    attackBonus: 8,
+    defenseBonus: 0,
+    price: 350,
+    sellPrice: 140,
+    stock: 5,
+    requiredLevel: 3,
+    isAvailable: true,
+  },
+  {
+    npcId: 6,
+    name: "Nhẫn Tốc Độ",
+    type: "accessory" as const,
+    rarity: "Thường" as const,
+    attackBonus: 0,
+    defenseBonus: 0,
+    price: 90,
+    sellPrice: 35,
+    stock: -1,
+    requiredLevel: 1,
+    isAvailable: true,
+  },
+  {
+    npcId: 6,
+    name: "Thảo Dược Hồi Máu",
+    type: "consumable" as const,
+    rarity: "Thường" as const,
+    attackBonus: 0,
+    defenseBonus: 0,
+    price: 40,
+    sellPrice: 15,
+    stock: -1,
+    requiredLevel: 1,
+    isAvailable: true,
+  },
+  // ── NPC 17: Thợ Rèn Lửa (World 2, Đồng Bằng Lửa, cấp 5–8) ──
+  {
+    npcId: 17,
+    name: "Kiếm Lửa",
+    type: "weapon" as const,
+    rarity: "Hiếm" as const,
+    attackBonus: 12,
+    defenseBonus: 0,
+    price: 600,
+    sellPrice: 240,
+    stock: -1,
+    requiredLevel: 5,
+    isAvailable: true,
+  },
+  {
+    npcId: 17,
+    name: "Kiếm Thần",
+    type: "weapon" as const,
+    rarity: "Sử Thi" as const,
+    attackBonus: 18,
+    defenseBonus: 0,
+    price: 1200,
+    sellPrice: 480,
+    stock: 3,
+    requiredLevel: 7,
+    isAvailable: true,
+  },
+  {
+    npcId: 17,
+    name: "Giáp Sắt",
+    type: "armor" as const,
+    rarity: "Hiếm" as const,
+    attackBonus: 0,
+    defenseBonus: 8,
+    price: 500,
+    sellPrice: 200,
+    stock: -1,
+    requiredLevel: 5,
+    isAvailable: true,
+  },
+  {
+    npcId: 17,
+    name: "Giáp Rồng",
+    type: "armor" as const,
+    rarity: "Sử Thi" as const,
+    attackBonus: 0,
+    defenseBonus: 14,
+    price: 1000,
+    sellPrice: 400,
+    stock: 3,
+    requiredLevel: 7,
+    isAvailable: true,
+  },
+  {
+    npcId: 17,
+    name: "Khiên Thép",
+    type: "armor" as const,
+    rarity: "Thường" as const,
+    attackBonus: 0,
+    defenseBonus: 6,
+    price: 280,
+    sellPrice: 110,
+    stock: -1,
+    requiredLevel: 5,
+    isAvailable: true,
+  },
+  {
+    npcId: 17,
+    name: "Quặng Hỏa Diệm",
+    type: "material" as const,
+    rarity: "Hiếm" as const,
+    attackBonus: 0,
+    defenseBonus: 0,
+    price: 180,
+    sellPrice: 70,
+    stock: 10,
+    requiredLevel: 5,
+    isAvailable: true,
+  },
+];
+
+async function seedShop() {
+  console.log("Seeding shop_items...");
+  const existing = await db.select().from(shopItemsTable);
+  if (existing.length > 0) {
+    console.log(`shop_items already has ${existing.length} rows — skipping.`);
+    process.exit(0);
+  }
+  const inserted = await db.insert(shopItemsTable).values(SHOP_ITEMS).returning();
+  console.log(`Inserted ${inserted.length} shop items.`);
+  process.exit(0);
+}
+
+seedShop().catch((err) => {
+  console.error("Seed failed:", err);
+  process.exit(1);
+});

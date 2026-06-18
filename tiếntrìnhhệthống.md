@@ -8,6 +8,7 @@
 
 | # | Ngày & Giờ | Chức Năng | Mô Tả Ngắn |
 |---|------------|-----------|-------------|
+| 6 | 18/06/2026 15:05 | **Merchant Shop & Economy System** | Bảng `shop_items` (13 items, 2 merchants); `inventory.source` field; `GET /characters/:id/shops/:npcId` với giá chiết khấu theo quan hệ (−20%/−10%/−5%/0%/+20%); `POST /shops/:npcId/buy` với guard: location, gold, stock, level, cross-merchant; 5 loại item mới: weapon/armor/consumable/accessory/material; `sell_price` schema-ready |
 | 5 | 18/06/2026 22:02 | **Hệ Thống Danh Tiếng & Quan Hệ** | 3 bảng mới (`character_npc_relationships`, `character_world_reputations`, `relationship_events`); tích hợp vào chiến đấu (+3/+8 thắng, −2 thua, −1 tẩu thoát), tương tác (+2/+3/+5/+1), và nhận thưởng nhiệm vụ (+15 NPC, +5 thế giới); 7 tier danh tiếng từ Tử Thù đến Anh Hùng; 3 GET endpoints mới |
 | 4 | 17/06/2026 20:30 | **Hệ Thống Nhiệm Vụ (Quest)** | 2 bảng (`quests`, `character_quests`); 10 nhiệm vụ seed; nhận / hoàn thành / nhận thưởng; tự động tăng tiến trình khi thắng chiến đấu; XP/Gold/level-up khi claim |
 | 3 | 17/06/2026 19:30 | **Hệ Thống Tương Tác NPC** | Bảng `npc_interactions`; endpoint `POST /interact` với 4 hành động (talk/trade/quest/inspect); kiểm tra vị trí nhân vật; template hội thoại theo vai trò NPC |

@@ -7,3 +7,4 @@ export * from "./inventory";
 export * from "./interactions";
 export * from "./quests";
 export * from "./reputation";
+export * from "./shop";

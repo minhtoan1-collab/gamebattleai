@@ -8,14 +8,19 @@
 import type { ItemRarity } from './itemRarity';
 import type { ItemType } from './itemType';
 
-export interface InventoryItem {
+export interface ShopItem {
   id: number;
-  characterId: number;
   name: string;
   type: ItemType;
   rarity: ItemRarity;
-  attackBonus?: number;
-  defenseBonus?: number;
-  isEquipped?: boolean;
-  source: string;
+  attackBonus: number;
+  defenseBonus: number;
+  basePrice: number;
+  sellPrice: number;
+  finalPrice: number;
+  stock: number;
+  requiredLevel: number;
+  isAvailable: boolean;
+  canAfford: boolean;
+  meetsLevel: boolean;
 }

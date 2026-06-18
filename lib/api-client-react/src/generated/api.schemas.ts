@@ -294,15 +294,88 @@ export interface BattleActionResult {
   result?: string | null;
 }
 
+export type ItemType = typeof ItemType[keyof typeof ItemType];
+
+
+export const ItemType = {
+  weapon: 'weapon',
+  armor: 'armor',
+  consumable: 'consumable',
+  accessory: 'accessory',
+  material: 'material',
+} as const;
+
+export type ItemRarity = typeof ItemRarity[keyof typeof ItemRarity];
+
+
+export const ItemRarity = {
+  Thường: 'Thường',
+  Hiếm: 'Hiếm',
+  Sử_Thi: 'Sử Thi',
+  Huyền_Thoại: 'Huyền Thoại',
+} as const;
+
 export interface InventoryItem {
   id: number;
   characterId: number;
   name: string;
-  type: string;
-  rarity: string;
+  type: ItemType;
+  rarity: ItemRarity;
   attackBonus?: number;
   defenseBonus?: number;
   isEquipped?: boolean;
+  source: string;
+}
+
+export interface ShopItem {
+  id: number;
+  name: string;
+  type: ItemType;
+  rarity: ItemRarity;
+  attackBonus: number;
+  defenseBonus: number;
+  basePrice: number;
+  sellPrice: number;
+  finalPrice: number;
+  stock: number;
+  requiredLevel: number;
+  isAvailable: boolean;
+  canAfford: boolean;
+  meetsLevel: boolean;
+}
+
+export type ShopInfoNpc = {
+  id: number;
+  name: string;
+  /** @nullable */
+  locationId: number | null;
+};
+
+export interface ShopInfo {
+  npc: ShopInfoNpc;
+  discount: number;
+  items: ShopItem[];
+}
+
+export interface BuyInput {
+  characterId: number;
+  shopItemId: number;
+}
+
+export type BuyResultCharacter = {
+  id: number;
+  gold: number;
+};
+
+export type BuyResultShopItem = {
+  id: number;
+  stock: number;
+};
+
+export interface BuyResult {
+  item: InventoryItem;
+  character: BuyResultCharacter;
+  shopItem: BuyResultShopItem;
 }
 
 export interface EquipInput {

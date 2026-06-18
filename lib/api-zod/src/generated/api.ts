@@ -600,6 +600,75 @@ export const BattleActionResponse = zod.object({
 
 
 /**
+ * @summary Xem hàng hóa của merchant (giá đã áp chiết khấu quan hệ)
+ */
+export const GetShopForCharacterParams = zod.object({
+  "characterId": zod.coerce.number(),
+  "npcId": zod.coerce.number()
+})
+
+export const GetShopForCharacterResponse = zod.object({
+  "npc": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "locationId": zod.number().nullable()
+}),
+  "discount": zod.number(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.enum(['weapon', 'armor', 'consumable', 'accessory', 'material']),
+  "rarity": zod.enum(['Thường', 'Hiếm', 'Sử Thi', 'Huyền Thoại']),
+  "attackBonus": zod.number(),
+  "defenseBonus": zod.number(),
+  "basePrice": zod.number(),
+  "sellPrice": zod.number(),
+  "finalPrice": zod.number(),
+  "stock": zod.number(),
+  "requiredLevel": zod.number(),
+  "isAvailable": zod.boolean(),
+  "canAfford": zod.boolean(),
+  "meetsLevel": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Mua vật phẩm từ merchant
+ */
+export const BuyItemParams = zod.object({
+  "npcId": zod.coerce.number()
+})
+
+export const BuyItemBody = zod.object({
+  "characterId": zod.number(),
+  "shopItemId": zod.number()
+})
+
+export const BuyItemResponse = zod.object({
+  "item": zod.object({
+  "id": zod.number(),
+  "characterId": zod.number(),
+  "name": zod.string(),
+  "type": zod.enum(['weapon', 'armor', 'consumable', 'accessory', 'material']),
+  "rarity": zod.enum(['Thường', 'Hiếm', 'Sử Thi', 'Huyền Thoại']),
+  "attackBonus": zod.number().optional(),
+  "defenseBonus": zod.number().optional(),
+  "isEquipped": zod.boolean().optional(),
+  "source": zod.string()
+}),
+  "character": zod.object({
+  "id": zod.number(),
+  "gold": zod.number()
+}),
+  "shopItem": zod.object({
+  "id": zod.number(),
+  "stock": zod.number()
+})
+})
+
+
+/**
  * @summary Kho đồ nhân vật
  */
 export const GetInventoryParams = zod.object({
@@ -610,11 +679,12 @@ export const GetInventoryResponseItem = zod.object({
   "id": zod.number(),
   "characterId": zod.number(),
   "name": zod.string(),
-  "type": zod.string(),
-  "rarity": zod.string(),
+  "type": zod.enum(['weapon', 'armor', 'consumable', 'accessory', 'material']),
+  "rarity": zod.enum(['Thường', 'Hiếm', 'Sử Thi', 'Huyền Thoại']),
   "attackBonus": zod.number().optional(),
   "defenseBonus": zod.number().optional(),
-  "isEquipped": zod.boolean().optional()
+  "isEquipped": zod.boolean().optional(),
+  "source": zod.string()
 })
 export const GetInventoryResponse = zod.array(GetInventoryResponseItem)
 

@@ -4,7 +4,7 @@ import {
   characterWorldReputationsTable,
   relationshipEventsTable,
 } from "@workspace/db";
-import { sql } from "drizzle-orm";
+import { sql, eq, and } from "drizzle-orm";
 
 export function scoreTier(score: number): string {
   if (score >= 80) return "Anh Hùng";
@@ -48,6 +48,22 @@ export async function adjustNpcRelationship(
     sourceType,
     sourceId,
   });
+}
+
+export async function getCharacterNpcRelationship(
+  characterId: number,
+  npcId: number
+): Promise<{ score: number } | null> {
+  const [row] = await db
+    .select()
+    .from(characterNpcRelationshipsTable)
+    .where(
+      and(
+        eq(characterNpcRelationshipsTable.characterId, characterId),
+        eq(characterNpcRelationshipsTable.npcId, npcId)
+      )
+    );
+  return row ?? null;
 }
 
 export async function adjustWorldReputation(

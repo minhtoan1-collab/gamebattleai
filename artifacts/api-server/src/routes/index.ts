@@ -11,6 +11,7 @@ import progressionRouter from "./progression";
 import interactRouter from "./interact";
 import questsRouter from "./quests";
 import reputationRouter from "./reputation";
+import shopRouter from "./shop";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(progressionRouter);
 router.use(interactRouter);
 router.use(questsRouter);
 router.use(reputationRouter);
+router.use(shopRouter);
 
 export default router;

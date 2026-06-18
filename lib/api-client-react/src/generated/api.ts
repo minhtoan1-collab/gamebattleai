@@ -25,6 +25,8 @@ import type {
   BattleActionInput,
   BattleActionResult,
   BattleStart,
+  BuyInput,
+  BuyResult,
   Character,
   CharacterInput,
   CharacterQuestWithDetails,
@@ -42,6 +44,7 @@ import type {
   ProgressionSummary,
   Quest,
   QuestCharacterInput,
+  ShopInfo,
   TravelInput,
   TravelResult,
   World,
@@ -2096,6 +2099,160 @@ export const useBattleAction = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getBattleActionMutationOptions(options));
+    }
+
+export const getGetShopForCharacterUrl = (characterId: number,
+    npcId: number,) => {
+
+
+
+
+  return `/api/characters/${characterId}/shops/${npcId}`
+}
+
+/**
+ * @summary Xem hàng hóa của merchant (giá đã áp chiết khấu quan hệ)
+ */
+export const getShopForCharacter = async (characterId: number,
+    npcId: number, options?: RequestInit): Promise<ShopInfo> => {
+
+  return customFetch<ShopInfo>(getGetShopForCharacterUrl(characterId,npcId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetShopForCharacterQueryKey = (characterId: number,
+    npcId: number,) => {
+    return [
+    `/api/characters/${characterId}/shops/${npcId}`
+    ] as const;
+    }
+
+
+export const getGetShopForCharacterQueryOptions = <TData = Awaited<ReturnType<typeof getShopForCharacter>>, TError = ErrorType<void>>(characterId: number,
+    npcId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getShopForCharacter>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetShopForCharacterQueryKey(characterId,npcId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getShopForCharacter>>> = ({ signal }) => getShopForCharacter(characterId,npcId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(characterId && npcId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getShopForCharacter>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetShopForCharacterQueryResult = NonNullable<Awaited<ReturnType<typeof getShopForCharacter>>>
+export type GetShopForCharacterQueryError = ErrorType<void>
+
+
+/**
+ * @summary Xem hàng hóa của merchant (giá đã áp chiết khấu quan hệ)
+ */
+
+export function useGetShopForCharacter<TData = Awaited<ReturnType<typeof getShopForCharacter>>, TError = ErrorType<void>>(
+ characterId: number,
+    npcId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getShopForCharacter>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetShopForCharacterQueryOptions(characterId,npcId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getBuyItemUrl = (npcId: number,) => {
+
+
+
+
+  return `/api/shops/${npcId}/buy`
+}
+
+/**
+ * @summary Mua vật phẩm từ merchant
+ */
+export const buyItem = async (npcId: number,
+    buyInput: BuyInput, options?: RequestInit): Promise<BuyResult> => {
+
+  return customFetch<BuyResult>(getBuyItemUrl(npcId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      buyInput,)
+  }
+);}
+
+
+
+
+export const getBuyItemMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof buyItem>>, TError,{npcId: number;data: BodyType<BuyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof buyItem>>, TError,{npcId: number;data: BodyType<BuyInput>}, TContext> => {
+
+const mutationKey = ['buyItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof buyItem>>, {npcId: number;data: BodyType<BuyInput>}> = (props) => {
+          const {npcId,data} = props ?? {};
+
+          return  buyItem(npcId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BuyItemMutationResult = NonNullable<Awaited<ReturnType<typeof buyItem>>>
+    export type BuyItemMutationBody = BodyType<BuyInput>
+    export type BuyItemMutationError = ErrorType<void>
+
+    /**
+ * @summary Mua vật phẩm từ merchant
+ */
+export const useBuyItem = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof buyItem>>, TError,{npcId: number;data: BodyType<BuyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof buyItem>>,
+        TError,
+        {npcId: number;data: BodyType<BuyInput>},
+        TContext
+      > => {
+      return useMutation(getBuyItemMutationOptions(options));
     }
 
 export const getGetInventoryUrl = (id: number,) => {
