@@ -9,6 +9,7 @@ import {
 } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { adjustNpcRelationship, adjustWorldReputation } from "../utils/reputation";
+import { unlockAvailableSkills } from "../utils/skillUnlock";
 
 const router = Router();
 
@@ -131,6 +132,8 @@ router.post("/quests/:id/claim", async (req, res) => {
         .set({ attack: stats.attack + 2, defense: stats.defense + 1, speed: stats.speed + 1 })
         .where(eq(characterStatsTable.characterId, characterId));
     }
+
+    await unlockAvailableSkills(characterId, newLevel);
   }
 
   const [updatedCharacter] = await db

@@ -30,6 +30,7 @@ import type {
   Character,
   CharacterInput,
   CharacterQuestWithDetails,
+  CharacterSkill,
   CharacterStats,
   ClaimQuestResult,
   EquipInput,
@@ -45,8 +46,10 @@ import type {
   Quest,
   QuestCharacterInput,
   ShopInfo,
+  Skill,
   TravelInput,
   TravelResult,
+  UnlockSkillResult,
   World,
   WorldReputationEntry
 } from './api.schemas';
@@ -2099,6 +2102,232 @@ export const useBattleAction = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getBattleActionMutationOptions(options));
+    }
+
+export const getListSkillsUrl = () => {
+
+
+
+
+  return `/api/skills`
+}
+
+/**
+ * @summary Tất cả kỹ năng đang hoạt động
+ */
+export const listSkills = async ( options?: RequestInit): Promise<Skill[]> => {
+
+  return customFetch<Skill[]>(getListSkillsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSkillsQueryKey = () => {
+    return [
+    `/api/skills`
+    ] as const;
+    }
+
+
+export const getListSkillsQueryOptions = <TData = Awaited<ReturnType<typeof listSkills>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSkills>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSkillsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSkills>>> = ({ signal }) => listSkills({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSkills>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSkillsQueryResult = NonNullable<Awaited<ReturnType<typeof listSkills>>>
+export type ListSkillsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Tất cả kỹ năng đang hoạt động
+ */
+
+export function useListSkills<TData = Awaited<ReturnType<typeof listSkills>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSkills>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSkillsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetCharacterSkillsUrl = (id: number,) => {
+
+
+
+
+  return `/api/characters/${id}/skills`
+}
+
+/**
+ * @summary Kỹ năng đã mở khóa của nhân vật
+ */
+export const getCharacterSkills = async (id: number, options?: RequestInit): Promise<CharacterSkill[]> => {
+
+  return customFetch<CharacterSkill[]>(getGetCharacterSkillsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCharacterSkillsQueryKey = (id: number,) => {
+    return [
+    `/api/characters/${id}/skills`
+    ] as const;
+    }
+
+
+export const getGetCharacterSkillsQueryOptions = <TData = Awaited<ReturnType<typeof getCharacterSkills>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacterSkills>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCharacterSkillsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCharacterSkills>>> = ({ signal }) => getCharacterSkills(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCharacterSkills>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCharacterSkillsQueryResult = NonNullable<Awaited<ReturnType<typeof getCharacterSkills>>>
+export type GetCharacterSkillsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Kỹ năng đã mở khóa của nhân vật
+ */
+
+export function useGetCharacterSkills<TData = Awaited<ReturnType<typeof getCharacterSkills>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacterSkills>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCharacterSkillsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUnlockSkillUrl = (id: number,
+    skillId: number,) => {
+
+
+
+
+  return `/api/characters/${id}/skills/${skillId}/unlock`
+}
+
+/**
+ * @summary Mở khóa kỹ năng thủ công (admin/testing)
+ */
+export const unlockSkill = async (id: number,
+    skillId: number, options?: RequestInit): Promise<UnlockSkillResult> => {
+
+  return customFetch<UnlockSkillResult>(getUnlockSkillUrl(id,skillId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getUnlockSkillMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockSkill>>, TError,{id: number;skillId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unlockSkill>>, TError,{id: number;skillId: number}, TContext> => {
+
+const mutationKey = ['unlockSkill'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unlockSkill>>, {id: number;skillId: number}> = (props) => {
+          const {id,skillId} = props ?? {};
+
+          return  unlockSkill(id,skillId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnlockSkillMutationResult = NonNullable<Awaited<ReturnType<typeof unlockSkill>>>
+
+    export type UnlockSkillMutationError = ErrorType<void>
+
+    /**
+ * @summary Mở khóa kỹ năng thủ công (admin/testing)
+ */
+export const useUnlockSkill = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockSkill>>, TError,{id: number;skillId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unlockSkill>>,
+        TError,
+        {id: number;skillId: number},
+        TContext
+      > => {
+      return useMutation(getUnlockSkillMutationOptions(options));
     }
 
 export const getGetShopForCharacterUrl = (characterId: number,

@@ -12,12 +12,12 @@ export interface Battle {
   npcId: number;
   status: string;
   currentTurn: number;
-  characterHp?: number;
-  npcHp?: number;
+  characterHp: number;
+  npcHp: number;
   /** @nullable */
   xpGained?: number | null;
   /** @nullable */
   goldGained?: number | null;
   log: string[];
-  createdAt?: string;
+  createdAt: string;
 }

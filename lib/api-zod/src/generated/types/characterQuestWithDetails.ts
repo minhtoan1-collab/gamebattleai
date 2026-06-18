@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Quest } from './quest';
-import type { QuestStatus } from './questStatus';
 
 export interface CharacterQuestWithDetails {
   id: number;
-  status: QuestStatus;
+  status: string;
   progress: number;
+  /** @nullable */
   completedAt?: string | null;
   quest: Quest;
 }

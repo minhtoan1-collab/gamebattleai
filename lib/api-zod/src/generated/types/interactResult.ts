@@ -7,10 +7,11 @@
  */
 import type { InteractResultInteraction } from './interactResultInteraction';
 import type { InteractResultNpc } from './interactResultNpc';
-import type { NpcInteractionType } from './npcInteractionType';
 
 export interface InteractResult {
   npc: InteractResultNpc;
   interaction: InteractResultInteraction;
-  availableActions: NpcInteractionType[];
+  availableActions: string[];
+  relationshipScore?: number;
+  relationshipLabel?: string;
 }

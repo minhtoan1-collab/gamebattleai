@@ -6,14 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RelationshipEvent {
+export type UnlockSkillResultCharacterSkill = {
   id: number;
   characterId: number;
-  npcId?: number | null;
-  worldId?: number | null;
-  eventType: string;
-  delta: number;
-  sourceType: string;
-  sourceId?: number | null;
-  createdAt: string;
-}
+  skillId: number;
+  unlockedAt: string;
+};

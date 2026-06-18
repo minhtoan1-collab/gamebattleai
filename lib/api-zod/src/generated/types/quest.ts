@@ -5,19 +5,20 @@
  * RPG World - Hệ thống nhập vai chiến đấu NPC
  * OpenAPI spec version: 0.1.0
  */
-import type { QuestType } from './questType';
 
 export interface Quest {
   id: number;
   title: string;
   description: string;
-  questType: QuestType;
+  questType: string;
+  /** @nullable */
   questGiverId?: number | null;
+  /** @nullable */
   targetNpcId?: number | null;
+  /** @nullable */
   targetRole?: string | null;
   targetCount: number;
   requiredLevel: number;
   rewardXp: number;
   rewardGold: number;
-  rewardItemId?: number | null;
 }

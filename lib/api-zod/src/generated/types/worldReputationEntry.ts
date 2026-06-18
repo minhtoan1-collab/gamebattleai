@@ -8,8 +8,6 @@
 
 export interface WorldReputationEntry {
   worldId: number;
-  worldName: string;
   score: number;
-  tier: string;
-  updatedAt?: string | null;
+  label: string;
 }

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Battle } from './battle';
+import type { BattleActionResultSkillUsed } from './battleActionResultSkillUsed';
 
 export interface BattleActionResult {
   battle: Battle;
@@ -13,4 +14,5 @@ export interface BattleActionResult {
   isOver: boolean;
   /** @nullable */
   result?: string | null;
+  skillUsed?: BattleActionResultSkillUsed;
 }

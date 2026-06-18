@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Character } from './character';
-import type { CharacterQuest } from './characterQuest';
+import type { ClaimQuestResultCharacterQuest } from './claimQuestResultCharacterQuest';
 import type { ClaimQuestResultRewards } from './claimQuestResultRewards';
 
 export interface ClaimQuestResult {
   rewards: ClaimQuestResultRewards;
   levelUp: boolean;
   character: Character;
-  characterQuest: CharacterQuest;
+  characterQuest: ClaimQuestResultCharacterQuest;
 }

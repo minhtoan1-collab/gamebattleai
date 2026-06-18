@@ -13,6 +13,8 @@ export interface Character {
   level: number;
   hp: number;
   maxHp: number;
+  mana: number;
+  maxMana: number;
   xp: number;
   xpToNext: number;
   gold: number;
@@ -24,5 +26,7 @@ export interface Character {
   equippedWeapon?: string | null;
   /** @nullable */
   equippedArmor?: string | null;
+  /** @nullable */
+  equippedAccessory?: string | null;
   createdAt?: string;
 }

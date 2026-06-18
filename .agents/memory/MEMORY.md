@@ -1,2 +1,4 @@
 - [Effective stats pattern](effective-stats.md) — getEffectiveStats() is the sole stat calc entry point; never hardcode attack/defense in handlers
 - [EquipSlot vs ItemType](equip-slot-pattern.md) — equipSlot (weapon/armor/accessory) is separate from item type; slot deduplication uses equipSlot column
+- [Seed script pattern](seed-script-pattern.md) — DB seed files need a top-level self-executing call; run via `DATABASE_URL=... npx tsx lib/db/src/seed/file.ts`
+- [Battle cooldown lifecycle](battle-cooldown-lifecycle.md) — cooldowns deleted on battle end (won/lost/fled); tick before action, upsert after skill use

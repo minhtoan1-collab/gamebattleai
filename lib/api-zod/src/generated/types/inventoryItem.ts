@@ -16,6 +16,8 @@ export interface InventoryItem {
   rarity: ItemRarity;
   attackBonus?: number;
   defenseBonus?: number;
+  /** @nullable */
+  equipSlot?: string | null;
   isEquipped?: boolean;
   source: string;
 }

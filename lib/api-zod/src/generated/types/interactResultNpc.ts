@@ -5,10 +5,9 @@
  * RPG World - Hệ thống nhập vai chiến đấu NPC
  * OpenAPI spec version: 0.1.0
  */
-import type { NpcRole } from './npcRole';
 
 export type InteractResultNpc = {
   id: number;
   name: string;
-  role: NpcRole;
+  role: string;
 };

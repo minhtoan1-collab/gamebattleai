@@ -19,6 +19,8 @@ tags:
     description: Chiến đấu
   - name: inventory
     description: Kho đồ và trang bị
+  - name: skills
+    description: Kỹ năng và chiêu thức
   - name: progression
     description: Tiến trình và xếp hạng
   - name: shop
@@ -567,6 +569,73 @@ paths:
               schema:
                 $ref: "#/components/schemas/BattleActionResult"
 
+  # ── SKILLS ──────────────────────────────────────────────────
+  /skills:
+    get:
+      operationId: listSkills
+      tags: [skills]
+      summary: Tất cả kỹ năng đang hoạt động
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Skill"
+
+  /characters/{id}/skills:
+    get:
+      operationId: getCharacterSkills
+      tags: [skills]
+      summary: Kỹ năng đã mở khóa của nhân vật
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CharacterSkill"
+
+  /characters/{id}/skills/{skillId}/unlock:
+    post:
+      operationId: unlockSkill
+      tags: [skills]
+      summary: Mở khóa kỹ năng thủ công (admin/testing)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: skillId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Skill unlocked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnlockSkillResult"
+        "403":
+          description: Level requirement not met
+        "404":
+          description: Character or skill not found
+        "409":
+          description: Already unlocked
+
   # ── SHOP ────────────────────────────────────────────────────
   /characters/{characterId}/shops/{npcId}:
     get:
@@ -710,7 +779,7 @@ components:
     # ── Character ──
     Character:
       type: object
-      required: [id, name, class, level, hp, maxHp, xp, xpToNext, gold, worldId]
+      required: [id, name, class, level, hp, maxHp, mana, maxMana, xp, xpToNext, gold, worldId]
       properties:
         id:                 { type: integer }
         name:               { type: string }
@@ -718,6 +787,8 @@ components:
         level:              { type: integer }
         hp:                 { type: integer }
         maxHp:              { type: integer }
+        mana:               { type: integer }
+        maxMana:            { type: integer }
         xp:                 { type: integer }
         xpToNext:           { type: integer }
         gold:               { type: integer }
@@ -725,6 +796,7 @@ components:
         currentLocationId:  { type: ["integer", "null"] }
         equippedWeapon:     { type: ["string", "null"] }
         equippedArmor:      { type: ["string", "null"] }
+        equippedAccessory:  { type: ["string", "null"] }
         createdAt:          { type: string }
 
     CharacterInput:
@@ -781,75 +853,63 @@ components:
           properties:
             id:   { type: integer }
             name: { type: string }
-            role: { $ref: "#/components/schemas/NpcRole" }
+            role: { type: string }
         interaction:
           type: object
-          required: [action, message]
+          required: [type, message]
           properties:
-            action:  { $ref: "#/components/schemas/NpcInteractionType" }
+            type:    { type: string }
             message: { type: string }
         availableActions:
           type: array
-          items:
-            $ref: "#/components/schemas/NpcInteractionType"
+          items: { type: string }
+        relationshipScore: { type: integer }
+        relationshipLabel: { type: string }
 
-    NpcInteraction:
+    # ── World ──
+    World:
       type: object
-      required: [id, characterId, npcId, interactionType, createdAt]
+      required: [id, name, description, requiredLevel, dangerLevel]
       properties:
-        id:              { type: integer }
-        characterId:     { type: integer }
-        npcId:           { type: integer }
-        interactionType: { $ref: "#/components/schemas/NpcInteractionType" }
-        metadata:        { type: object, nullable: true }
-        createdAt:       { type: string }
+        id:            { type: integer }
+        name:          { type: string }
+        description:   { type: string }
+        requiredLevel: { type: integer }
+        dangerLevel:   { type: integer }
+
+    # ── NPC ──
+    Npc:
+      type: object
+      required: [id, name, role, level, hp, worldId]
+      properties:
+        id:          { type: integer }
+        name:        { type: string }
+        role:        { type: string }
+        level:       { type: integer }
+        hp:          { type: integer }
+        worldId:     { type: integer }
+        locationId:  { type: ["integer", "null"] }
+        xpReward:    { type: integer }
+        goldReward:  { type: integer }
+        difficulty:  { type: string }
+        isBoss:      { type: boolean }
 
     # ── Quest ──
-    QuestType:
-      type: string
-      enum: [kill_npc, kill_role]
-
-    QuestStatus:
-      type: string
-      enum: [active, completed, claimed]
-
     Quest:
       type: object
-      required: [id, title, description, questType, targetCount, requiredLevel, rewardXp, rewardGold]
+      required: [id, title, description, questType, requiredLevel, rewardXp, rewardGold, targetCount]
       properties:
-        id:             { type: integer }
-        title:          { type: string }
-        description:    { type: string }
-        questType:      { $ref: "#/components/schemas/QuestType" }
-        questGiverId:   { type: integer, nullable: true }
-        targetNpcId:    { type: integer, nullable: true }
-        targetRole:     { type: string, nullable: true }
-        targetCount:    { type: integer }
-        requiredLevel:  { type: integer }
-        rewardXp:       { type: integer }
-        rewardGold:     { type: integer }
-        rewardItemId:   { type: integer, nullable: true }
-
-    CharacterQuest:
-      type: object
-      required: [id, characterId, questId, status, progress]
-      properties:
-        id:          { type: integer }
-        characterId: { type: integer }
-        questId:     { type: integer }
-        status:      { $ref: "#/components/schemas/QuestStatus" }
-        progress:    { type: integer }
-        completedAt: { type: string, nullable: true }
-
-    CharacterQuestWithDetails:
-      type: object
-      required: [id, status, progress, quest]
-      properties:
-        id:          { type: integer }
-        status:      { $ref: "#/components/schemas/QuestStatus" }
-        progress:    { type: integer }
-        completedAt: { type: string, nullable: true }
-        quest:       { $ref: "#/components/schemas/Quest" }
+        id:            { type: integer }
+        title:         { type: string }
+        description:   { type: string }
+        questType:     { type: string }
+        questGiverId:  { type: ["integer", "null"] }
+        targetNpcId:   { type: ["integer", "null"] }
+        targetRole:    { type: ["string", "null"] }
+        targetCount:   { type: integer }
+        requiredLevel: { type: integer }
+        rewardXp:      { type: integer }
+        rewardGold:    { type: integer }
 
     QuestCharacterInput:
       type: object
@@ -861,8 +921,16 @@ components:
       type: object
       required: [characterQuest, quest]
       properties:
-        characterQuest: { $ref: "#/components/schemas/CharacterQuest" }
-        quest:          { $ref: "#/components/schemas/Quest" }
+        characterQuest:
+          type: object
+          required: [id, characterId, questId, status, progress]
+          properties:
+            id:          { type: integer }
+            characterId: { type: integer }
+            questId:     { type: integer }
+            status:      { type: string }
+            progress:    { type: integer }
+        quest: { $ref: "#/components/schemas/Quest" }
 
     ClaimQuestResult:
       type: object
@@ -874,45 +942,41 @@ components:
           properties:
             xp:   { type: integer }
             gold: { type: integer }
-        levelUp:       { type: boolean }
-        character:     { $ref: "#/components/schemas/Character" }
-        characterQuest: { $ref: "#/components/schemas/CharacterQuest" }
+        levelUp:        { type: boolean }
+        character:      { $ref: "#/components/schemas/Character" }
+        characterQuest:
+          type: object
+          required: [id, status]
+          properties:
+            id:     { type: integer }
+            status: { type: string }
+
+    CharacterQuestWithDetails:
+      type: object
+      required: [id, status, progress, quest]
+      properties:
+        id:          { type: integer }
+        status:      { type: string }
+        progress:    { type: integer }
+        completedAt: { type: ["string", "null"] }
+        quest:       { $ref: "#/components/schemas/Quest" }
 
     # ── Reputation ──
     WorldReputationEntry:
       type: object
-      required: [worldId, worldName, score, tier]
+      required: [worldId, score, label]
       properties:
-        worldId:   { type: integer }
-        worldName: { type: string }
-        score:     { type: integer }
-        tier:      { type: string }
-        updatedAt: { type: string, nullable: true }
+        worldId: { type: integer }
+        score:   { type: integer }
+        label:   { type: string }
 
     NpcRelationshipEntry:
       type: object
-      required: [npcId, npcName, npcRole, score, tier]
+      required: [npcId, score, label]
       properties:
-        npcId:     { type: integer }
-        npcName:   { type: string }
-        npcRole:   { $ref: "#/components/schemas/NpcRole" }
-        score:     { type: integer }
-        tier:      { type: string }
-        updatedAt: { type: string, nullable: true }
-
-    RelationshipEvent:
-      type: object
-      required: [id, characterId, eventType, delta, sourceType, createdAt]
-      properties:
-        id:          { type: integer }
-        characterId: { type: integer }
-        npcId:       { type: integer, nullable: true }
-        worldId:     { type: integer, nullable: true }
-        eventType:   { type: string }
-        delta:       { type: integer }
-        sourceType:  { type: string }
-        sourceId:    { type: integer, nullable: true }
-        createdAt:   { type: string }
+        npcId: { type: integer }
+        score: { type: integer }
+        label: { type: string }
 
     # ── Travel ──
     TravelInput:
@@ -925,73 +989,30 @@ components:
 
     TravelResult:
       type: object
-      required: [character, world, availableNpcs]
+      required: [character, world]
       properties:
         character: { $ref: "#/components/schemas/Character" }
         world:     { $ref: "#/components/schemas/World" }
-        location:
-          oneOf:
-            - $ref: "#/components/schemas/Location"
-            - type: "null"
-        availableNpcs:
-          type: array
-          items:
-            $ref: "#/components/schemas/Npc"
-
-    # ── World ──
-    World:
-      type: object
-      required: [id, name, description, theme, minLevel, npcCount]
-      properties:
-        id:          { type: integer }
-        name:        { type: string }
-        description: { type: string }
-        theme:       { type: string }
-        minLevel:    { type: integer }
-        npcCount:    { type: integer }
-        isBossWorld: { type: boolean }
-
-    # ── NPC ──
-    NpcRole:
-      type: string
-      enum: [enemy, merchant, guard, quest_giver, boss]
-
-    Npc:
-      type: object
-      required: [id, name, type, level, hp, worldId, difficulty, role, description, isInteractable]
-      properties:
-        id:             { type: integer }
-        name:           { type: string }
-        type:           { type: string }
-        level:          { type: integer }
-        hp:             { type: integer }
-        maxHp:          { type: integer }
-        worldId:        { type: integer }
-        locationId:     { type: ["integer", "null"] }
-        difficulty:     { type: string }
-        xpReward:       { type: integer }
-        goldReward:     { type: integer }
-        isBoss:         { type: boolean }
-        role:           { $ref: "#/components/schemas/NpcRole" }
-        description:    { type: string }
-        isInteractable: { type: boolean }
+        location:  { $ref: "#/components/schemas/Location" }
 
     # ── Battle ──
     Battle:
       type: object
-      required: [id, characterId, npcId, status, currentTurn, log]
+      required: [id, characterId, npcId, status, currentTurn, characterHp, npcHp, log, createdAt]
       properties:
-        id:            { type: integer }
-        characterId:   { type: integer }
-        npcId:         { type: integer }
-        status:        { type: string }
-        currentTurn:   { type: integer }
-        characterHp:   { type: integer }
-        npcHp:         { type: integer }
-        xpGained:      { type: ["integer", "null"] }
-        goldGained:    { type: ["integer", "null"] }
-        log:           { type: array, items: { type: string } }
-        createdAt:     { type: string }
+        id:          { type: integer }
+        characterId: { type: integer }
+        npcId:       { type: integer }
+        status:      { type: string }
+        currentTurn: { type: integer }
+        characterHp: { type: integer }
+        npcHp:       { type: integer }
+        xpGained:    { type: ["integer", "null"] }
+        goldGained:  { type: ["integer", "null"] }
+        log:
+          type: array
+          items: { type: string }
+        createdAt:   { type: string }
 
     BattleStart:
       type: object
@@ -1007,15 +1028,72 @@ components:
         action:
           type: string
           enum: [attack, skill, defend, flee]
+        skillId:
+          type: integer
 
     BattleActionResult:
       type: object
       required: [battle, log, isOver]
       properties:
-        battle: { $ref: "#/components/schemas/Battle" }
-        log:    { type: array, items: { type: string } }
-        isOver: { type: boolean }
-        result: { type: ["string", "null"] }
+        battle:   { $ref: "#/components/schemas/Battle" }
+        log:      { type: array, items: { type: string } }
+        isOver:   { type: boolean }
+        result:   { type: ["string", "null"] }
+        skillUsed:
+          type: object
+          properties:
+            id:   { type: integer }
+            name: { type: string }
+          required: [id, name]
+
+    # ── Skills ──
+    SkillType:
+      type: string
+      enum: [attack, heal, buff, debuff, utility]
+
+    Skill:
+      type: object
+      required: [id, name, description, skillType, requiredLevel, manaCost, cooldownTurns, damageMultiplier, healPercent, isActive]
+      properties:
+        id:               { type: integer }
+        name:             { type: string }
+        description:      { type: string }
+        skillType:        { $ref: "#/components/schemas/SkillType" }
+        requiredLevel:    { type: integer }
+        manaCost:         { type: integer }
+        cooldownTurns:    { type: integer }
+        damageMultiplier: { type: string }
+        healPercent:      { type: integer }
+        isActive:         { type: boolean }
+
+    CharacterSkill:
+      type: object
+      required: [id, name, description, skillType, requiredLevel, manaCost, cooldownTurns, damageMultiplier, healPercent, unlockedAt]
+      properties:
+        id:               { type: integer }
+        name:             { type: string }
+        description:      { type: string }
+        skillType:        { $ref: "#/components/schemas/SkillType" }
+        requiredLevel:    { type: integer }
+        manaCost:         { type: integer }
+        cooldownTurns:    { type: integer }
+        damageMultiplier: { type: string }
+        healPercent:      { type: integer }
+        unlockedAt:       { type: string }
+
+    UnlockSkillResult:
+      type: object
+      required: [characterSkill, skill]
+      properties:
+        characterSkill:
+          type: object
+          required: [id, characterId, skillId, unlockedAt]
+          properties:
+            id:          { type: integer }
+            characterId: { type: integer }
+            skillId:     { type: integer }
+            unlockedAt:  { type: string }
+        skill: { $ref: "#/components/schemas/Skill" }
 
     # ── Inventory ──
     ItemType:
@@ -1037,6 +1115,7 @@ components:
         rarity:       { $ref: "#/components/schemas/ItemRarity" }
         attackBonus:  { type: integer }
         defenseBonus: { type: integer }
+        equipSlot:    { type: ["string", "null"] }
         isEquipped:   { type: boolean }
         source:       { type: string }
 

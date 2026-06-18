@@ -5,10 +5,10 @@
  * RPG World - Hệ thống nhập vai chiến đấu NPC
  * OpenAPI spec version: 0.1.0
  */
-import type { CharacterQuest } from './characterQuest';
+import type { AcceptQuestResultCharacterQuest } from './acceptQuestResultCharacterQuest';
 import type { Quest } from './quest';
 
 export interface AcceptQuestResult {
-  characterQuest: CharacterQuest;
+  characterQuest: AcceptQuestResultCharacterQuest;
   quest: Quest;
 }

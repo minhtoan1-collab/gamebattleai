@@ -26,6 +26,8 @@ export const ListCharactersResponseItem = zod.object({
   "level": zod.number(),
   "hp": zod.number(),
   "maxHp": zod.number(),
+  "mana": zod.number(),
+  "maxMana": zod.number(),
   "xp": zod.number(),
   "xpToNext": zod.number(),
   "gold": zod.number(),
@@ -33,6 +35,7 @@ export const ListCharactersResponseItem = zod.object({
   "currentLocationId": zod.number().nullish(),
   "equippedWeapon": zod.string().nullish(),
   "equippedArmor": zod.string().nullish(),
+  "equippedAccessory": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 export const ListCharactersResponse = zod.array(ListCharactersResponseItem)
@@ -64,6 +67,8 @@ export const GetCharacterResponse = zod.object({
   "level": zod.number(),
   "hp": zod.number(),
   "maxHp": zod.number(),
+  "mana": zod.number(),
+  "maxMana": zod.number(),
   "xp": zod.number(),
   "xpToNext": zod.number(),
   "gold": zod.number(),
@@ -71,6 +76,7 @@ export const GetCharacterResponse = zod.object({
   "currentLocationId": zod.number().nullish(),
   "equippedWeapon": zod.string().nullish(),
   "equippedArmor": zod.string().nullish(),
+  "equippedAccessory": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 
@@ -109,10 +115,8 @@ export const ListWorldsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "description": zod.string(),
-  "theme": zod.string(),
-  "minLevel": zod.number(),
-  "npcCount": zod.number(),
-  "isBossWorld": zod.boolean().optional()
+  "requiredLevel": zod.number(),
+  "dangerLevel": zod.number()
 })
 export const ListWorldsResponse = zod.array(ListWorldsResponseItem)
 
@@ -128,10 +132,8 @@ export const GetWorldResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "description": zod.string(),
-  "theme": zod.string(),
-  "minLevel": zod.number(),
-  "npcCount": zod.number(),
-  "isBossWorld": zod.boolean().optional()
+  "requiredLevel": zod.number(),
+  "dangerLevel": zod.number()
 })
 
 
@@ -162,19 +164,15 @@ export const ListWorldNpcsParams = zod.object({
 export const ListWorldNpcsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.string(),
+  "role": zod.string(),
   "level": zod.number(),
   "hp": zod.number(),
-  "maxHp": zod.number().optional(),
   "worldId": zod.number(),
   "locationId": zod.number().nullish(),
-  "difficulty": zod.string(),
   "xpReward": zod.number().optional(),
   "goldReward": zod.number().optional(),
-  "isBoss": zod.boolean().optional(),
-  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
-  "description": zod.string(),
-  "isInteractable": zod.boolean()
+  "difficulty": zod.string().optional(),
+  "isBoss": zod.boolean().optional()
 })
 export const ListWorldNpcsResponse = zod.array(ListWorldNpcsResponseItem)
 
@@ -189,19 +187,15 @@ export const ListLocationNpcsParams = zod.object({
 export const ListLocationNpcsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.string(),
+  "role": zod.string(),
   "level": zod.number(),
   "hp": zod.number(),
-  "maxHp": zod.number().optional(),
   "worldId": zod.number(),
   "locationId": zod.number().nullish(),
-  "difficulty": zod.string(),
   "xpReward": zod.number().optional(),
   "goldReward": zod.number().optional(),
-  "isBoss": zod.boolean().optional(),
-  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
-  "description": zod.string(),
-  "isInteractable": zod.boolean()
+  "difficulty": zod.string().optional(),
+  "isBoss": zod.boolean().optional()
 })
 export const ListLocationNpcsResponse = zod.array(ListLocationNpcsResponseItem)
 
@@ -235,13 +229,15 @@ export const InteractResponse = zod.object({
   "npc": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss'])
+  "role": zod.string()
 }),
   "interaction": zod.object({
-  "action": zod.enum(['talk', 'trade', 'quest', 'inspect']),
+  "type": zod.string(),
   "message": zod.string()
 }),
-  "availableActions": zod.array(zod.enum(['talk', 'trade', 'quest', 'inspect']))
+  "availableActions": zod.array(zod.string()),
+  "relationshipScore": zod.number().optional(),
+  "relationshipLabel": zod.string().optional()
 })
 
 
@@ -256,15 +252,14 @@ export const GetQuestResponse = zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
-  "questType": zod.enum(['kill_npc', 'kill_role']),
+  "questType": zod.string(),
   "questGiverId": zod.number().nullish(),
   "targetNpcId": zod.number().nullish(),
   "targetRole": zod.string().nullish(),
   "targetCount": zod.number(),
   "requiredLevel": zod.number(),
   "rewardXp": zod.number(),
-  "rewardGold": zod.number(),
-  "rewardItemId": zod.number().nullish()
+  "rewardGold": zod.number()
 })
 
 
@@ -304,6 +299,8 @@ export const ClaimQuestResponse = zod.object({
   "level": zod.number(),
   "hp": zod.number(),
   "maxHp": zod.number(),
+  "mana": zod.number(),
+  "maxMana": zod.number(),
   "xp": zod.number(),
   "xpToNext": zod.number(),
   "gold": zod.number(),
@@ -311,15 +308,12 @@ export const ClaimQuestResponse = zod.object({
   "currentLocationId": zod.number().nullish(),
   "equippedWeapon": zod.string().nullish(),
   "equippedArmor": zod.string().nullish(),
+  "equippedAccessory": zod.string().nullish(),
   "createdAt": zod.string().optional()
 }),
   "characterQuest": zod.object({
   "id": zod.number(),
-  "characterId": zod.number(),
-  "questId": zod.number(),
-  "status": zod.enum(['active', 'completed', 'claimed']),
-  "progress": zod.number(),
-  "completedAt": zod.string().nullish()
+  "status": zod.string()
 })
 })
 
@@ -333,22 +327,21 @@ export const GetCharacterQuestsParams = zod.object({
 
 export const GetCharacterQuestsResponseItem = zod.object({
   "id": zod.number(),
-  "status": zod.enum(['active', 'completed', 'claimed']),
+  "status": zod.string(),
   "progress": zod.number(),
   "completedAt": zod.string().nullish(),
   "quest": zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
-  "questType": zod.enum(['kill_npc', 'kill_role']),
+  "questType": zod.string(),
   "questGiverId": zod.number().nullish(),
   "targetNpcId": zod.number().nullish(),
   "targetRole": zod.string().nullish(),
   "targetCount": zod.number(),
   "requiredLevel": zod.number(),
   "rewardXp": zod.number(),
-  "rewardGold": zod.number(),
-  "rewardItemId": zod.number().nullish()
+  "rewardGold": zod.number()
 })
 })
 export const GetCharacterQuestsResponse = zod.array(GetCharacterQuestsResponseItem)
@@ -363,10 +356,8 @@ export const GetCharacterReputationParams = zod.object({
 
 export const GetCharacterReputationResponseItem = zod.object({
   "worldId": zod.number(),
-  "worldName": zod.string(),
   "score": zod.number(),
-  "tier": zod.string(),
-  "updatedAt": zod.string().nullish()
+  "label": zod.string()
 })
 export const GetCharacterReputationResponse = zod.array(GetCharacterReputationResponseItem)
 
@@ -380,11 +371,8 @@ export const GetCharacterRelationshipsParams = zod.object({
 
 export const GetCharacterRelationshipsResponseItem = zod.object({
   "npcId": zod.number(),
-  "npcName": zod.string(),
-  "npcRole": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
   "score": zod.number(),
-  "tier": zod.string(),
-  "updatedAt": zod.string().nullish()
+  "label": zod.string()
 })
 export const GetCharacterRelationshipsResponse = zod.array(GetCharacterRelationshipsResponseItem)
 
@@ -399,11 +387,8 @@ export const GetCharacterNpcRelationshipParams = zod.object({
 
 export const GetCharacterNpcRelationshipResponse = zod.object({
   "npcId": zod.number(),
-  "npcName": zod.string(),
-  "npcRole": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
   "score": zod.number(),
-  "tier": zod.string(),
-  "updatedAt": zod.string().nullish()
+  "label": zod.string()
 })
 
 
@@ -424,6 +409,8 @@ export const TravelResponse = zod.object({
   "level": zod.number(),
   "hp": zod.number(),
   "maxHp": zod.number(),
+  "mana": zod.number(),
+  "maxMana": zod.number(),
   "xp": zod.number(),
   "xpToNext": zod.number(),
   "gold": zod.number(),
@@ -431,41 +418,23 @@ export const TravelResponse = zod.object({
   "currentLocationId": zod.number().nullish(),
   "equippedWeapon": zod.string().nullish(),
   "equippedArmor": zod.string().nullish(),
+  "equippedAccessory": zod.string().nullish(),
   "createdAt": zod.string().optional()
 }),
   "world": zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "description": zod.string(),
-  "theme": zod.string(),
-  "minLevel": zod.number(),
-  "npcCount": zod.number(),
-  "isBossWorld": zod.boolean().optional()
+  "requiredLevel": zod.number(),
+  "dangerLevel": zod.number()
 }),
-  "location": zod.union([zod.object({
+  "location": zod.object({
   "id": zod.number(),
   "worldId": zod.number(),
   "name": zod.string(),
   "description": zod.string(),
   "dangerLevel": zod.number()
-}),zod.null()]).optional(),
-  "availableNpcs": zod.array(zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "type": zod.string(),
-  "level": zod.number(),
-  "hp": zod.number(),
-  "maxHp": zod.number().optional(),
-  "worldId": zod.number(),
-  "locationId": zod.number().nullish(),
-  "difficulty": zod.string(),
-  "xpReward": zod.number().optional(),
-  "goldReward": zod.number().optional(),
-  "isBoss": zod.boolean().optional(),
-  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
-  "description": zod.string(),
-  "isInteractable": zod.boolean()
-}))
+}).optional()
 })
 
 
@@ -475,19 +444,15 @@ export const TravelResponse = zod.object({
 export const ListNpcsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.string(),
+  "role": zod.string(),
   "level": zod.number(),
   "hp": zod.number(),
-  "maxHp": zod.number().optional(),
   "worldId": zod.number(),
   "locationId": zod.number().nullish(),
-  "difficulty": zod.string(),
   "xpReward": zod.number().optional(),
   "goldReward": zod.number().optional(),
-  "isBoss": zod.boolean().optional(),
-  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
-  "description": zod.string(),
-  "isInteractable": zod.boolean()
+  "difficulty": zod.string().optional(),
+  "isBoss": zod.boolean().optional()
 })
 export const ListNpcsResponse = zod.array(ListNpcsResponseItem)
 
@@ -502,19 +467,15 @@ export const GetNpcParams = zod.object({
 export const GetNpcResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.string(),
+  "role": zod.string(),
   "level": zod.number(),
   "hp": zod.number(),
-  "maxHp": zod.number().optional(),
   "worldId": zod.number(),
   "locationId": zod.number().nullish(),
-  "difficulty": zod.string(),
   "xpReward": zod.number().optional(),
   "goldReward": zod.number().optional(),
-  "isBoss": zod.boolean().optional(),
-  "role": zod.enum(['enemy', 'merchant', 'guard', 'quest_giver', 'boss']),
-  "description": zod.string(),
-  "isInteractable": zod.boolean()
+  "difficulty": zod.string().optional(),
+  "isBoss": zod.boolean().optional()
 })
 
 
@@ -527,12 +488,12 @@ export const ListBattlesResponseItem = zod.object({
   "npcId": zod.number(),
   "status": zod.string(),
   "currentTurn": zod.number(),
-  "characterHp": zod.number().optional(),
-  "npcHp": zod.number().optional(),
+  "characterHp": zod.number(),
+  "npcHp": zod.number(),
   "xpGained": zod.number().nullish(),
   "goldGained": zod.number().nullish(),
   "log": zod.array(zod.string()),
-  "createdAt": zod.string().optional()
+  "createdAt": zod.string()
 })
 export const ListBattlesResponse = zod.array(ListBattlesResponseItem)
 
@@ -559,12 +520,12 @@ export const GetBattleResponse = zod.object({
   "npcId": zod.number(),
   "status": zod.string(),
   "currentTurn": zod.number(),
-  "characterHp": zod.number().optional(),
-  "npcHp": zod.number().optional(),
+  "characterHp": zod.number(),
+  "npcHp": zod.number(),
   "xpGained": zod.number().nullish(),
   "goldGained": zod.number().nullish(),
   "log": zod.array(zod.string()),
-  "createdAt": zod.string().optional()
+  "createdAt": zod.string()
 })
 
 
@@ -576,7 +537,8 @@ export const BattleActionParams = zod.object({
 })
 
 export const BattleActionBody = zod.object({
-  "action": zod.enum(['attack', 'skill', 'defend', 'flee'])
+  "action": zod.enum(['attack', 'skill', 'defend', 'flee']),
+  "skillId": zod.number().optional()
 })
 
 export const BattleActionResponse = zod.object({
@@ -586,16 +548,69 @@ export const BattleActionResponse = zod.object({
   "npcId": zod.number(),
   "status": zod.string(),
   "currentTurn": zod.number(),
-  "characterHp": zod.number().optional(),
-  "npcHp": zod.number().optional(),
+  "characterHp": zod.number(),
+  "npcHp": zod.number(),
   "xpGained": zod.number().nullish(),
   "goldGained": zod.number().nullish(),
   "log": zod.array(zod.string()),
-  "createdAt": zod.string().optional()
+  "createdAt": zod.string()
 }),
   "log": zod.array(zod.string()),
   "isOver": zod.boolean(),
-  "result": zod.string().nullish()
+  "result": zod.string().nullish(),
+  "skillUsed": zod.object({
+  "id": zod.number(),
+  "name": zod.string()
+}).optional()
+})
+
+
+/**
+ * @summary Tất cả kỹ năng đang hoạt động
+ */
+export const ListSkillsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "skillType": zod.enum(['attack', 'heal', 'buff', 'debuff', 'utility']),
+  "requiredLevel": zod.number(),
+  "manaCost": zod.number(),
+  "cooldownTurns": zod.number(),
+  "damageMultiplier": zod.string(),
+  "healPercent": zod.number(),
+  "isActive": zod.boolean()
+})
+export const ListSkillsResponse = zod.array(ListSkillsResponseItem)
+
+
+/**
+ * @summary Kỹ năng đã mở khóa của nhân vật
+ */
+export const GetCharacterSkillsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCharacterSkillsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "skillType": zod.enum(['attack', 'heal', 'buff', 'debuff', 'utility']),
+  "requiredLevel": zod.number(),
+  "manaCost": zod.number(),
+  "cooldownTurns": zod.number(),
+  "damageMultiplier": zod.string(),
+  "healPercent": zod.number(),
+  "unlockedAt": zod.string()
+})
+export const GetCharacterSkillsResponse = zod.array(GetCharacterSkillsResponseItem)
+
+
+/**
+ * @summary Mở khóa kỹ năng thủ công (admin/testing)
+ */
+export const UnlockSkillParams = zod.object({
+  "id": zod.coerce.number(),
+  "skillId": zod.coerce.number()
 })
 
 
@@ -654,6 +669,7 @@ export const BuyItemResponse = zod.object({
   "rarity": zod.enum(['Thường', 'Hiếm', 'Sử Thi', 'Huyền Thoại']),
   "attackBonus": zod.number().optional(),
   "defenseBonus": zod.number().optional(),
+  "equipSlot": zod.string().nullish(),
   "isEquipped": zod.boolean().optional(),
   "source": zod.string()
 }),
@@ -683,6 +699,7 @@ export const GetInventoryResponseItem = zod.object({
   "rarity": zod.enum(['Thường', 'Hiếm', 'Sử Thi', 'Huyền Thoại']),
   "attackBonus": zod.number().optional(),
   "defenseBonus": zod.number().optional(),
+  "equipSlot": zod.string().nullish(),
   "isEquipped": zod.boolean().optional(),
   "source": zod.string()
 })
@@ -707,6 +724,8 @@ export const EquipItemResponse = zod.object({
   "level": zod.number(),
   "hp": zod.number(),
   "maxHp": zod.number(),
+  "mana": zod.number(),
+  "maxMana": zod.number(),
   "xp": zod.number(),
   "xpToNext": zod.number(),
   "gold": zod.number(),
@@ -714,6 +733,7 @@ export const EquipItemResponse = zod.object({
   "currentLocationId": zod.number().nullish(),
   "equippedWeapon": zod.string().nullish(),
   "equippedArmor": zod.string().nullish(),
+  "equippedAccessory": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 

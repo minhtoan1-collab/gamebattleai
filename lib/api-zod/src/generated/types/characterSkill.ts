@@ -5,11 +5,17 @@
  * RPG World - Hệ thống nhập vai chiến đấu NPC
  * OpenAPI spec version: 0.1.0
  */
+import type { SkillType } from './skillType';
 
-export interface World {
+export interface CharacterSkill {
   id: number;
   name: string;
   description: string;
+  skillType: SkillType;
   requiredLevel: number;
-  dangerLevel: number;
+  manaCost: number;
+  cooldownTurns: number;
+  damageMultiplier: string;
+  healPercent: number;
+  unlockedAt: string;
 }

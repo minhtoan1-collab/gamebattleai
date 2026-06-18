@@ -6,11 +6,15 @@ import {
   characterStatsTable,
   npcsTable,
   inventoryTable,
+  skillsTable,
+  characterSkillsTable,
+  battleSkillCooldownsTable,
 } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import { advanceQuestProgress } from "../utils/questProgress";
 import { adjustWorldReputation } from "../utils/reputation";
 import { getEffectiveStats } from "../utils/effectiveStats";
+import { unlockAvailableSkills } from "../utils/skillUnlock";
 import {
   StartBattleBody,
   GetBattleParams,
@@ -107,6 +111,32 @@ async function maybeDropItem(characterId: number, npc: { isBoss: boolean; diffic
   });
 }
 
+async function cleanupBattleCooldowns(battleId: number): Promise<void> {
+  await db
+    .delete(battleSkillCooldownsTable)
+    .where(eq(battleSkillCooldownsTable.battleId, battleId));
+}
+
+async function tickCooldowns(battleId: number, characterId: number): Promise<void> {
+  const active = await db
+    .select()
+    .from(battleSkillCooldownsTable)
+    .where(
+      and(
+        eq(battleSkillCooldownsTable.battleId, battleId),
+        eq(battleSkillCooldownsTable.characterId, characterId),
+        gt(battleSkillCooldownsTable.remainingTurns, 0),
+      ),
+    );
+
+  for (const cd of active) {
+    await db
+      .update(battleSkillCooldownsTable)
+      .set({ remainingTurns: cd.remainingTurns - 1 })
+      .where(eq(battleSkillCooldownsTable.id, cd.id));
+  }
+}
+
 router.get("/battles", async (_req, res) => {
   const battles = await db
     .select()
@@ -170,6 +200,7 @@ router.post("/battles/:id/action", async (req, res) => {
 
   const { id } = paramsParsed.data;
   const { action } = bodyParsed.data;
+  const skillId: number | undefined = typeof req.body.skillId === "number" ? req.body.skillId : undefined;
 
   const [battle] = await db
     .select()
@@ -196,12 +227,18 @@ router.post("/battles/:id/action", async (req, res) => {
 
   const { base: stats, effectiveAttack, effectiveDefense, critRate } = effectiveStats;
 
+  await tickCooldowns(battle.id, battle.characterId);
+
+  const MANA_REGEN_PER_TURN = 3;
+  let currentMana = Math.min(character.mana + MANA_REGEN_PER_TURN, character.maxMana);
+
   const newLog: string[] = [];
   let { characterHp, npcHp } = battle;
   let status = "active";
   let isDefending = false;
   let xpGained: number | null = null;
   let goldGained: number | null = null;
+  let skillUsed: { id: number; name: string } | null = null;
 
   if (action === "flee") {
     const success = Math.random() < 0.5;
@@ -215,9 +252,88 @@ router.post("/battles/:id/action", async (req, res) => {
     isDefending = true;
     newLog.push(`${character.name} vào tư thế phòng thủ! Giảm 50% sát thương nhận vào.`);
   } else if (action === "skill") {
-    const skillDmg = Math.max(1, Math.round(effectiveAttack * 1.8 - npc.hp * 0.02));
-    npcHp = Math.max(0, npcHp - skillDmg);
-    newLog.push(`${character.name} sử dụng KỸ NĂNG! Gây ${skillDmg} sát thương lên ${npc.name}!`);
+    if (!skillId) {
+      return res.status(400).json({ error: "skillId is required when action is 'skill'" });
+    }
+
+    const [skill] = await db
+      .select()
+      .from(skillsTable)
+      .where(and(eq(skillsTable.id, skillId), eq(skillsTable.isActive, true)));
+    if (!skill) return res.status(404).json({ error: "Skill not found" });
+
+    const [owned] = await db
+      .select()
+      .from(characterSkillsTable)
+      .where(
+        and(
+          eq(characterSkillsTable.characterId, battle.characterId),
+          eq(characterSkillsTable.skillId, skillId),
+        ),
+      );
+    if (!owned) {
+      return res.status(403).json({ error: "Kỹ năng chưa được mở khóa." });
+    }
+
+    const [cooldownRow] = await db
+      .select()
+      .from(battleSkillCooldownsTable)
+      .where(
+        and(
+          eq(battleSkillCooldownsTable.battleId, battle.id),
+          eq(battleSkillCooldownsTable.characterId, battle.characterId),
+          eq(battleSkillCooldownsTable.skillId, skillId),
+        ),
+      );
+    if (cooldownRow && cooldownRow.remainingTurns > 0) {
+      return res.status(400).json({
+        error: `Kỹ năng đang hồi chiêu. Còn ${cooldownRow.remainingTurns} lượt.`,
+      });
+    }
+
+    if (currentMana < skill.manaCost) {
+      return res.status(400).json({
+        error: `Không đủ mana. Cần ${skill.manaCost}, còn ${currentMana}.`,
+      });
+    }
+
+    currentMana -= skill.manaCost;
+
+    if (skill.skillType === "heal") {
+      const healAmount = Math.round((character.maxHp * skill.healPercent) / 100);
+      characterHp = Math.min(characterHp + healAmount, character.maxHp);
+      newLog.push(
+        `${character.name} sử dụng ${skill.name}! Hồi phục ${healAmount} HP.`,
+      );
+    } else {
+      const multiplier = Number(skill.damageMultiplier);
+      const skillDmg = Math.max(1, Math.round(effectiveAttack * multiplier));
+      npcHp = Math.max(0, npcHp - skillDmg);
+      newLog.push(
+        `${character.name} sử dụng ${skill.name}! Gây ${skillDmg} sát thương lên ${npc.name}!`,
+      );
+    }
+
+    if (skill.cooldownTurns > 0) {
+      await db
+        .insert(battleSkillCooldownsTable)
+        .values({
+          battleId: battle.id,
+          characterId: battle.characterId,
+          skillId,
+          remainingTurns: skill.cooldownTurns,
+        })
+        .onConflictDoUpdate({
+          target: [
+            battleSkillCooldownsTable.battleId,
+            battleSkillCooldownsTable.characterId,
+            battleSkillCooldownsTable.skillId,
+          ],
+          set: { remainingTurns: skill.cooldownTurns },
+        });
+    }
+
+    skillUsed = { id: skill.id, name: skill.name };
   } else {
     const { dmg, crit } = calcDamage(effectiveAttack, Math.max(0, npc.level * 0.5), critRate);
     npcHp = Math.max(0, npcHp - dmg);
@@ -275,7 +391,14 @@ router.post("/battles/:id/action", async (req, res) => {
 
   const isOver = status !== "active";
 
+  await db
+    .update(charactersTable)
+    .set({ mana: currentMana })
+    .where(eq(charactersTable.id, character.id));
+
   if (status === "won") {
+    await cleanupBattleCooldowns(battle.id);
+
     const newXp = character.xp + (xpGained ?? 0);
     const newGold = character.gold + (goldGained ?? 0);
     let newLevel = character.level;
@@ -296,6 +419,8 @@ router.post("/battles/:id/action", async (req, res) => {
           speed: stats.speed + 1,
         })
         .where(eq(characterStatsTable.characterId, character.id));
+
+      await unlockAvailableSkills(character.id, newLevel);
     }
 
     await db
@@ -329,6 +454,8 @@ router.post("/battles/:id/action", async (req, res) => {
         .where(eq(battlesTable.id, id));
     }
   } else if (status === "lost") {
+    await cleanupBattleCooldowns(battle.id);
+
     const lostGold = Math.round(character.gold * 0.1);
     await db
       .update(charactersTable)
@@ -344,6 +471,8 @@ router.post("/battles/:id/action", async (req, res) => {
         losses: stats.losses + 1,
       })
       .where(eq(characterStatsTable.characterId, character.id));
+  } else if (status === "fled") {
+    await cleanupBattleCooldowns(battle.id);
   }
 
   const result = status === "won" ? "victory" : status === "lost" ? "defeat" : status === "fled" ? "fled" : null;
@@ -357,12 +486,15 @@ router.post("/battles/:id/action", async (req, res) => {
     await adjustWorldReputation(character.id, npc.worldId, -1, "battle_fled", "battle", id);
   }
 
-  res.json({
+  const response: Record<string, unknown> = {
     battle: updatedBattle,
     log: newLog,
     isOver,
     result,
-  });
+  };
+  if (skillUsed) response.skillUsed = skillUsed;
+
+  res.json(response);
 });
 
 export default router;

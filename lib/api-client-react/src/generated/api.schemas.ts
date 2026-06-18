@@ -16,6 +16,8 @@ export interface Character {
   level: number;
   hp: number;
   maxHp: number;
+  mana: number;
+  maxMana: number;
   xp: number;
   xpToNext: number;
   gold: number;
@@ -27,6 +29,8 @@ export interface Character {
   equippedWeapon?: string | null;
   /** @nullable */
   equippedArmor?: string | null;
+  /** @nullable */
+  equippedAccessory?: string | null;
   createdAt?: string;
 }
 
@@ -71,100 +75,79 @@ export interface InteractInput {
   action: NpcInteractionType;
 }
 
-export type NpcRole = typeof NpcRole[keyof typeof NpcRole];
-
-
-export const NpcRole = {
-  enemy: 'enemy',
-  merchant: 'merchant',
-  guard: 'guard',
-  quest_giver: 'quest_giver',
-  boss: 'boss',
-} as const;
-
 export type InteractResultNpc = {
   id: number;
   name: string;
-  role: NpcRole;
+  role: string;
 };
 
 export type InteractResultInteraction = {
-  action: NpcInteractionType;
+  type: string;
   message: string;
 };
 
 export interface InteractResult {
   npc: InteractResultNpc;
   interaction: InteractResultInteraction;
-  availableActions: NpcInteractionType[];
+  availableActions: string[];
+  relationshipScore?: number;
+  relationshipLabel?: string;
 }
 
-export type NpcInteractionMetadata = { [key: string]: unknown } | null;
-
-export interface NpcInteraction {
+export interface World {
   id: number;
-  characterId: number;
-  npcId: number;
-  interactionType: NpcInteractionType;
-  metadata?: NpcInteractionMetadata;
-  createdAt: string;
+  name: string;
+  description: string;
+  requiredLevel: number;
+  dangerLevel: number;
 }
 
-export type QuestType = typeof QuestType[keyof typeof QuestType];
-
-
-export const QuestType = {
-  kill_npc: 'kill_npc',
-  kill_role: 'kill_role',
-} as const;
-
-export type QuestStatus = typeof QuestStatus[keyof typeof QuestStatus];
-
-
-export const QuestStatus = {
-  active: 'active',
-  completed: 'completed',
-  claimed: 'claimed',
-} as const;
+export interface Npc {
+  id: number;
+  name: string;
+  role: string;
+  level: number;
+  hp: number;
+  worldId: number;
+  /** @nullable */
+  locationId?: number | null;
+  xpReward?: number;
+  goldReward?: number;
+  difficulty?: string;
+  isBoss?: boolean;
+}
 
 export interface Quest {
   id: number;
   title: string;
   description: string;
-  questType: QuestType;
+  questType: string;
+  /** @nullable */
   questGiverId?: number | null;
+  /** @nullable */
   targetNpcId?: number | null;
+  /** @nullable */
   targetRole?: string | null;
   targetCount: number;
   requiredLevel: number;
   rewardXp: number;
   rewardGold: number;
-  rewardItemId?: number | null;
-}
-
-export interface CharacterQuest {
-  id: number;
-  characterId: number;
-  questId: number;
-  status: QuestStatus;
-  progress: number;
-  completedAt?: string | null;
-}
-
-export interface CharacterQuestWithDetails {
-  id: number;
-  status: QuestStatus;
-  progress: number;
-  completedAt?: string | null;
-  quest: Quest;
 }
 
 export interface QuestCharacterInput {
   characterId: number;
 }
 
+export type AcceptQuestResultCharacterQuest = {
+  id: number;
+  characterId: number;
+  questId: number;
+  status: string;
+  progress: number;
+};
+
 export interface AcceptQuestResult {
-  characterQuest: CharacterQuest;
+  characterQuest: AcceptQuestResultCharacterQuest;
   quest: Quest;
 }
 
@@ -173,40 +156,37 @@ export type ClaimQuestResultRewards = {
   gold: number;
 };
 
+export type ClaimQuestResultCharacterQuest = {
+  id: number;
+  status: string;
+};
+
 export interface ClaimQuestResult {
   rewards: ClaimQuestResultRewards;
   levelUp: boolean;
   character: Character;
-  characterQuest: CharacterQuest;
+  characterQuest: ClaimQuestResultCharacterQuest;
+}
+
+export interface CharacterQuestWithDetails {
+  id: number;
+  status: string;
+  progress: number;
+  /** @nullable */
+  completedAt?: string | null;
+  quest: Quest;
 }
 
 export interface WorldReputationEntry {
   worldId: number;
-  worldName: string;
   score: number;
-  tier: string;
-  updatedAt?: string | null;
+  label: string;
 }
 
 export interface NpcRelationshipEntry {
   npcId: number;
-  npcName: string;
-  npcRole: NpcRole;
   score: number;
-  tier: string;
-  updatedAt?: string | null;
-}
-
-export interface RelationshipEvent {
-  id: number;
-  characterId: number;
-  npcId?: number | null;
-  worldId?: number | null;
-  eventType: string;
-  delta: number;
-  sourceType: string;
-  sourceId?: number | null;
-  createdAt: string;
+  label: string;
 }
 
 export interface TravelInput {
@@ -215,40 +195,10 @@ export interface TravelInput {
   locationId?: number;
 }
 
-export interface World {
-  id: number;
-  name: string;
-  description: string;
-  theme: string;
-  minLevel: number;
-  npcCount: number;
-  isBossWorld?: boolean;
-}
-
-export interface Npc {
-  id: number;
-  name: string;
-  type: string;
-  level: number;
-  hp: number;
-  maxHp?: number;
-  worldId: number;
-  /** @nullable */
-  locationId?: number | null;
-  difficulty: string;
-  xpReward?: number;
-  goldReward?: number;
-  isBoss?: boolean;
-  role: NpcRole;
-  description: string;
-  isInteractable: boolean;
-}
-
 export interface TravelResult {
   character: Character;
   world: World;
-  location?: Location | null;
-  availableNpcs: Npc[];
+  location?: Location;
 }
 
 export interface Battle {
@@ -257,14 +207,14 @@ export interface Battle {
   npcId: number;
   status: string;
   currentTurn: number;
-  characterHp?: number;
-  npcHp?: number;
+  characterHp: number;
+  npcHp: number;
   /** @nullable */
   xpGained?: number | null;
   /** @nullable */
   goldGained?: number | null;
   log: string[];
-  createdAt?: string;
+  createdAt: string;
 }
 
 export interface BattleStart {
@@ -284,7 +234,13 @@ export const BattleActionInputAction = {
 
 export interface BattleActionInput {
   action: BattleActionInputAction;
+  skillId?: number;
 }
+
+export type BattleActionResultSkillUsed = {
+  id: number;
+  name: string;
+};
 
 export interface BattleActionResult {
   battle: Battle;
@@ -292,6 +248,56 @@ export interface BattleActionResult {
   isOver: boolean;
   /** @nullable */
   result?: string | null;
+  skillUsed?: BattleActionResultSkillUsed;
+}
+
+export type SkillType = typeof SkillType[keyof typeof SkillType];
+
+
+export const SkillType = {
+  attack: 'attack',
+  heal: 'heal',
+  buff: 'buff',
+  debuff: 'debuff',
+  utility: 'utility',
+} as const;
+
+export interface Skill {
+  id: number;
+  name: string;
+  description: string;
+  skillType: SkillType;
+  requiredLevel: number;
+  manaCost: number;
+  cooldownTurns: number;
+  damageMultiplier: string;
+  healPercent: number;
+  isActive: boolean;
+}
+
+export interface CharacterSkill {
+  id: number;
+  name: string;
+  description: string;
+  skillType: SkillType;
+  requiredLevel: number;
+  manaCost: number;
+  cooldownTurns: number;
+  damageMultiplier: string;
+  healPercent: number;
+  unlockedAt: string;
+}
+
+export type UnlockSkillResultCharacterSkill = {
+  id: number;
+  characterId: number;
+  skillId: number;
+  unlockedAt: string;
+};
+
+export interface UnlockSkillResult {
+  characterSkill: UnlockSkillResultCharacterSkill;
+  skill: Skill;
 }
 
 export type ItemType = typeof ItemType[keyof typeof ItemType];
@@ -323,6 +329,8 @@ export interface InventoryItem {
   rarity: ItemRarity;
   attackBonus?: number;
   defenseBonus?: number;
+  /** @nullable */
+  equipSlot?: string | null;
   isEquipped?: boolean;
   source: string;
 }

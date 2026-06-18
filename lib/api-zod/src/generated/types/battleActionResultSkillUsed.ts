@@ -6,10 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type QuestType = typeof QuestType[keyof typeof QuestType];
-
-
-export const QuestType = {
-  kill_npc: 'kill_npc',
-  kill_role: 'kill_role',
-} as const;
+export type BattleActionResultSkillUsed = {
+  id: number;
+  name: string;
+};

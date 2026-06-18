@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type InteractResultInteraction = {
-  type: string;
-  message: string;
+export type ClaimQuestResultCharacterQuest = {
+  id: number;
+  status: string;
 };

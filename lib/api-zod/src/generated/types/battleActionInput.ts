@@ -9,4 +9,5 @@ import type { BattleActionInputAction } from './battleActionInputAction';
 
 export interface BattleActionInput {
   action: BattleActionInputAction;
+  skillId?: number;
 }
