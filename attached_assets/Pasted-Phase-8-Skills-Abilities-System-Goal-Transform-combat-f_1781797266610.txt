@@ -1,0 +1,301 @@
+Phase 8: Skills & Abilities System
+
+Goal:
+Transform combat from simple stat comparison into a real RPG ability system.
+
+Current State:
+- Characters exist
+- Battles exist
+- Equipment bonuses already affect combat
+- Quests, Reputation, Relationships, Shops are complete
+- Battle actions currently support attack / defend / skill / flee
+- Existing APIs must remain backward compatible
+
+====================================================
+DATABASE
+====================================================
+
+New table: skills
+
+id                serial PK
+name              text NOT NULL
+description       text NOT NULL
+
+skill_type        text NOT NULL
+                  enum:
+                  attack
+                  heal
+                  buff
+                  debuff
+
+required_level    integer NOT NULL DEFAULT 1
+
+mana_cost         integer NOT NULL DEFAULT 0
+
+cooldown_turns    integer NOT NULL DEFAULT 0
+
+damage_multiplier numeric NOT NULL DEFAULT 1.0
+
+heal_percent      integer NOT NULL DEFAULT 0
+
+is_active         boolean NOT NULL DEFAULT true
+
+----------------------------------------------------
+
+New table: character_skills
+
+id                serial PK
+
+character_id      integer NOT NULL FK → characters.id
+
+skill_id          integer NOT NULL FK → skills.id
+
+unlocked_at       timestamp DEFAULT now()
+
+Unique:
+(character_id, skill_id)
+
+====================================================
+SEED DATA
+====================================================
+
+Skill #1
+Power Strike
+
+type: attack
+required_level: 3
+mana_cost: 5
+cooldown: 2
+damage_multiplier: 1.8
+
+----------------------------------------------------
+
+Skill #2
+Shield Bash
+
+type: attack
+required_level: 5
+mana_cost: 8
+cooldown: 3
+damage_multiplier: 1.4
+
+Future metadata:
+stunChance = 20%
+
+----------------------------------------------------
+
+Skill #3
+Fireball
+
+type: attack
+required_level: 8
+mana_cost: 15
+cooldown: 3
+damage_multiplier: 2.2
+
+----------------------------------------------------
+
+Skill #4
+Healing Light
+
+type: heal
+required_level: 10
+mana_cost: 20
+cooldown: 4
+heal_percent: 25
+
+----------------------------------------------------
+
+Skill #5
+Whirlwind
+
+type: attack
+required_level: 12
+mana_cost: 25
+cooldown: 5
+damage_multiplier: 3.0
+
+====================================================
+CHARACTER UNLOCK SYSTEM
+====================================================
+
+When character reaches required_level:
+
+Automatically unlock skill.
+
+Create helper:
+
+unlockAvailableSkills(characterId)
+
+Call after:
+
+- level up from battle
+- quest reward level-up
+
+If skill already unlocked:
+do nothing
+
+====================================================
+API
+====================================================
+
+GET /skills
+
+Returns all active skills
+
+----------------------------------------------------
+
+GET /characters/:id/skills
+
+Returns unlocked skills
+
+Example:
+
+[
+  {
+    "id": 1,
+    "name": "Power Strike",
+    "requiredLevel": 3
+  }
+]
+
+----------------------------------------------------
+
+POST /characters/:id/skills/:skillId/unlock
+
+Manual admin/testing endpoint
+
+Validation:
+
+- character exists
+- skill exists
+- level requirement met
+- not already unlocked
+
+====================================================
+COMBAT INTEGRATION
+====================================================
+
+Current battle endpoint remains unchanged.
+
+Existing actions:
+
+attack
+defend
+skill
+flee
+
+----------------------------------------------------
+
+When action = skill
+
+Request:
+
+{
+  "action": "skill",
+  "skillId": 3
+}
+
+Validation:
+
+1. skill exists
+2. character owns skill
+3. cooldown ready
+4. enough mana
+
+----------------------------------------------------
+
+Attack skills:
+
+damage =
+effectiveAttack
+× damageMultiplier
+
+Examples:
+
+Power Strike
+1.8x
+
+Fireball
+2.2x
+
+Whirlwind
+3.0x
+
+----------------------------------------------------
+
+Heal skills:
+
+restore HP
+
+healAmount =
+maxHp × healPercent
+
+Example:
+
+Healing Light
+
+heal 25% max HP
+
+====================================================
+COOLDOWN SYSTEM
+====================================================
+
+New table:
+
+battle_skill_cooldowns
+
+id
+battle_id
+character_id
+skill_id
+
+remaining_turns
+
+----------------------------------------------------
+
+Every battle turn:
+
+remaining_turns -= 1
+
+Skill usable only when:
+
+remaining_turns == 0
+
+====================================================
+RESPONSE SHAPE
+====================================================
+
+Keep existing battle responses backward compatible.
+
+Add:
+
+{
+  "skillUsed": {
+    "id": 3,
+    "name": "Fireball"
+  }
+}
+
+when action = skill
+
+====================================================
+REQUIREMENTS
+====================================================
+
+- No breaking changes
+- Existing battle endpoints continue working
+- Equipment bonuses remain included
+- Skill damage uses effective stats
+- Skill unlocks automatically on level-up
+- OpenAPI updated
+- Codegen regenerated
+
+Before coding:
+show
+
+1. schema diff
+2. migration plan
+3. cooldown design
+4. level-up integration plan
+5. battle integration plan
