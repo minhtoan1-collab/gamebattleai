@@ -4,6 +4,18 @@
 
 ---
 
+## 📋 Lịch Sử Build
+
+| # | Ngày & Giờ | Chức Năng | Mô Tả Ngắn |
+|---|------------|-----------|-------------|
+| 5 | 18/06/2026 22:02 | **Hệ Thống Danh Tiếng & Quan Hệ** | 3 bảng mới (`character_npc_relationships`, `character_world_reputations`, `relationship_events`); tích hợp vào chiến đấu (+3/+8 thắng, −2 thua, −1 tẩu thoát), tương tác (+2/+3/+5/+1), và nhận thưởng nhiệm vụ (+15 NPC, +5 thế giới); 7 tier danh tiếng từ Tử Thù đến Anh Hùng; 3 GET endpoints mới |
+| 4 | 17/06/2026 20:30 | **Hệ Thống Nhiệm Vụ (Quest)** | 2 bảng (`quests`, `character_quests`); 10 nhiệm vụ seed; nhận / hoàn thành / nhận thưởng; tự động tăng tiến trình khi thắng chiến đấu; XP/Gold/level-up khi claim |
+| 3 | 17/06/2026 19:30 | **Hệ Thống Tương Tác NPC** | Bảng `npc_interactions`; endpoint `POST /interact` với 4 hành động (talk/trade/quest/inspect); kiểm tra vị trí nhân vật; template hội thoại theo vai trò NPC |
+| 2 | 17/06/2026 19:00 | **Hệ Thống Thế Giới — Phase 2** | Di chuyển giữa các thế giới (`POST /travel`); kiểm tra cấp độ tối thiểu; vị trí nhân vật trong thế giới; NPC theo location |
+| 1 | 17/06/2026 18:45 | **Hệ Thống Thế Giới — Phase 1** | 5 thế giới, 25 NPC, hệ thống chiến đấu theo lượt, trang bị, kho đồ, bảng xếp hạng; MVP cơ bản đầy đủ |
+
+---
+
 ## 1. Tổng Quan Hệ Thống
 
 RPG World là game nhập vai nơi người chơi tạo nhân vật, khám phá các thế giới khác nhau, chiến đấu với NPC (non-player character), thu thập trang bị và phát triển nhân vật theo thời gian.
@@ -331,6 +343,20 @@ Theo dõi các chỉ số toàn server:
 | Thông Tin       | Giá Trị                   |
 |-----------------|---------------------------|
 | Thời gian mở    | 17/06/2026 19:59:47                |
+| Tài khoản       | kenzhyer0              |
+| Repl ID         | 791fd08d-b115-41c2-8e45-04211725b2a6                |
+| Repl Slug       | workspace              |
+| Trạng thái      | ✅ Dự án đã khởi động    |
+
+*Ghi tự động khi mở dự án — RPG World Auto-Build System*
+
+---
+
+## 🔄 Auto-Build Log — 18/06/2026 14:29:44
+
+| Thông Tin       | Giá Trị                   |
+|-----------------|---------------------------|
+| Thời gian mở    | 18/06/2026 14:29:44                |
 | Tài khoản       | kenzhyer0              |
 | Repl ID         | 791fd08d-b115-41c2-8e45-04211725b2a6                |
 | Repl Slug       | workspace              |
