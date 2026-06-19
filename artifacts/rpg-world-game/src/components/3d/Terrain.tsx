@@ -1,6 +1,5 @@
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { useFrame } from "@react-three/fiber";
 
 interface TerrainProps {
   biome: number;
@@ -8,12 +7,12 @@ interface TerrainProps {
   segments?: number;
 }
 
-const BIOME_COLORS: Record<number, { base: string; high: string; low: string }> = {
-  1: { base: "#2d6a2d", high: "#5a8a3a", low: "#1a4a1a" },
-  2: { base: "#c8a45a", high: "#e8c87a", low: "#a07a30" },
-  3: { base: "#c8dce8", high: "#ffffff", low: "#8aaccc" },
-  4: { base: "#3a1a0a", high: "#5a2a10", low: "#7a1a00" },
-  5: { base: "#1a0a3a", high: "#3a1a6a", low: "#0a0520" },
+const BIOME_COLORS: Record<number, { base: string; high: string; low: string; water?: string }> = {
+  1: { base: "#3a8a2a", high: "#78c840", low: "#1e6010", water: "#1a6090" },
+  2: { base: "#e0b464", high: "#f8d884", low: "#b87c28", water: "#c09830" },
+  3: { base: "#e0eef8", high: "#ffffff", low: "#90b8d8" },
+  4: { base: "#6a1a00", high: "#aa2800", low: "#ff3300" },
+  5: { base: "#2a0a5a", high: "#6030aa", low: "#0a0528" },
 };
 
 function noise(x: number, z: number, octaves = 6): number {
@@ -31,49 +30,55 @@ function noise(x: number, z: number, octaves = 6): number {
   return val / max;
 }
 
-export default function Terrain({ biome, size = 200, segments = 120 }: TerrainProps) {
+export default function Terrain({ biome, size = 200, segments = 100 }: TerrainProps) {
   const meshRef = useRef<THREE.Mesh>(null);
 
-  const { geometry, colors } = useMemo(() => {
+  const { geometry } = useMemo(() => {
     const geo = new THREE.PlaneGeometry(size, size, segments, segments);
     geo.rotateX(-Math.PI / 2);
 
     const positions = geo.attributes.position;
     const colorsArr = new Float32Array(positions.count * 3);
-    const biomeColors = BIOME_COLORS[biome] ?? BIOME_COLORS[1];
+    const bc = BIOME_COLORS[biome] ?? BIOME_COLORS[1];
 
-    const baseColor = new THREE.Color(biomeColors.base);
-    const highColor = new THREE.Color(biomeColors.high);
-    const lowColor = new THREE.Color(biomeColors.low);
+    const baseColor = new THREE.Color(bc.base);
+    const highColor = new THREE.Color(bc.high);
+    const lowColor = new THREE.Color(bc.low);
 
-    const heightScale = biome === 3 ? 18 : biome === 4 ? 14 : biome === 2 ? 6 : biome === 5 ? 22 : 10;
+    const heightScale = biome === 3 ? 20 : biome === 4 ? 16 : biome === 2 ? 8 : biome === 5 ? 24 : 12;
 
     for (let i = 0; i < positions.count; i++) {
       const x = positions.getX(i);
       const z = positions.getZ(i);
 
       const distFromCenter = Math.sqrt(x * x + z * z) / (size * 0.5);
-      const edgeFade = Math.max(0, 1 - distFromCenter * 1.2);
+      const edgeFade = Math.max(0, 1 - distFromCenter * 1.1);
 
       let h = noise(x, z) * heightScale * edgeFade;
 
       if (biome === 3) {
-        h = Math.abs(h) + noise(x * 2, z * 2) * 3;
+        h = Math.abs(h) * 1.2 + noise(x * 2, z * 2) * 4;
       } else if (biome === 4) {
-        h = Math.abs(h) * 1.2;
+        h = Math.abs(h) * 1.4;
         const craterDist = Math.sqrt((x - 20) ** 2 + (z - 10) ** 2);
-        if (craterDist < 25) h = Math.max(0, h - (25 - craterDist) * 0.5);
+        if (craterDist < 25) h = Math.max(0, h - (25 - craterDist) * 0.6);
       } else if (biome === 5) {
-        h = noise(x * 0.5, z * 0.5) * heightScale + Math.sin(x * 0.2) * Math.cos(z * 0.2) * 8;
+        h = noise(x * 0.5, z * 0.5) * heightScale + Math.sin(x * 0.2) * Math.cos(z * 0.2) * 10;
       }
 
       positions.setY(i, h);
 
       const t = Math.max(0, Math.min(1, (h / heightScale + 1) / 2));
-      const col = new THREE.Color().lerpColors(lowColor, t > 0.6 ? highColor : baseColor, t > 0.6 ? (t - 0.6) / 0.4 : t / 0.6);
+      let col: THREE.Color;
+      if (t > 0.65) {
+        col = new THREE.Color().lerpColors(baseColor, highColor, (t - 0.65) / 0.35);
+      } else {
+        col = new THREE.Color().lerpColors(lowColor, baseColor, t / 0.65);
+      }
 
-      if (biome === 4 && h < 1) {
-        col.set("#ff2200").multiplyScalar(0.4 + Math.random() * 0.3);
+      // Lava for biome 4 at low points
+      if (biome === 4 && h < 1.5) {
+        col.set("#ff2200").multiplyScalar(0.5 + Math.random() * 0.4);
       }
 
       colorsArr[i * 3] = col.r;
@@ -83,15 +88,15 @@ export default function Terrain({ biome, size = 200, segments = 120 }: TerrainPr
 
     geo.setAttribute("color", new THREE.BufferAttribute(colorsArr, 3));
     geo.computeVertexNormals();
-    return { geometry: geo, colors: colorsArr };
+    return { geometry: geo };
   }, [biome, size, segments]);
 
   return (
     <mesh ref={meshRef} geometry={geometry} receiveShadow castShadow>
       <meshStandardMaterial
         vertexColors
-        roughness={0.85}
-        metalness={biome === 4 ? 0.2 : 0.05}
+        roughness={0.7}
+        metalness={biome === 4 ? 0.1 : 0.0}
         side={THREE.FrontSide}
       />
     </mesh>
@@ -101,10 +106,10 @@ export default function Terrain({ biome, size = 200, segments = 120 }: TerrainPr
 export function getTerrainHeight(x: number, z: number, biome: number): number {
   const size = 200;
   const distFromCenter = Math.sqrt(x * x + z * z) / (size * 0.5);
-  const edgeFade = Math.max(0, 1 - distFromCenter * 1.2);
-  const heightScale = biome === 3 ? 18 : biome === 4 ? 14 : biome === 2 ? 6 : biome === 5 ? 22 : 10;
+  const edgeFade = Math.max(0, 1 - distFromCenter * 1.1);
+  const heightScale = biome === 3 ? 20 : biome === 4 ? 16 : biome === 2 ? 8 : biome === 5 ? 24 : 12;
   let h = noise(x, z) * heightScale * edgeFade;
-  if (biome === 3) h = Math.abs(h) + noise(x * 2, z * 2) * 3;
-  else if (biome === 4) h = Math.abs(h) * 1.2;
+  if (biome === 3) h = Math.abs(h) * 1.2 + noise(x * 2, z * 2) * 4;
+  else if (biome === 4) h = Math.abs(h) * 1.4;
   return h;
 }
